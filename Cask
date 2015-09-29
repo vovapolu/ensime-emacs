@@ -22,8 +22,15 @@
 ;;
 ;;; Code:
 
-(source melpa)
+(source melpa-stable)
 
 (package-file "ensime.el")
+
+(development
+ ;; optional dependencies
+ ;;(depends-on "auto-complete")
+
+ ; genuine dev dependencies
+ (depends-on "undercover"))
 
 ;;; Cask ends here

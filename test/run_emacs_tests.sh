@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# NOTE: check the .drone.yml file for the cask commands that are
+# needed to initialise your environment.
+
+# TODO: it would be good to rewrite all our tests using standard
+# ert-runner (and lose our custom test start scripts), but that is
+# very tricky because of our async testing. We could turn each of our
+# tests into an ert-deftest but that requires some macro expertise.
+
 # tests must be run from the parent of the test directory
 cd "`dirname $0`/../"
 

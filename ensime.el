@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/ensime/ensime-emacs
 ;; Keywords: languages
 ;; Package-Version:  0.9.10
-;; Package-Requires: ((scala-mode2 "0.21") (sbt-mode "0.03") (popup "0.5.0") (yasnippet "0.8.0") (company "0.8.7") (auto-complete "1.5.0") (dash "2.10.0") (s "1.3.0"))
+;; Package-Requires: ((scala-mode2 "0.22") (sbt-mode "0.1") (yasnippet "0.9.0.1") (company "0.8.12") (dash "2.11.0") (s "1.10.0") (popup "0.5.3"))
 
 ;;; Commentary:
 ;;
@@ -15,10 +15,6 @@
 ;;  not possible with emacs-lisp pattern matching.
 ;;
 ;;; Code:
-
-(eval-and-compile
-  (when (<= emacs-major-version 21)
-    (error "Ensime requires Emacs 22 or higher")))
 
 (eval-and-compile
   (require 'cl)
@@ -35,16 +31,13 @@
 (require 'hideshow)
 (require 'flymake)
 (require 'font-lock)
-(require 'auto-complete)
 (require 'easymenu)
 (require 'ensime-client)
 (require 'ensime-util)
 (require 'ensime-vars)
 (require 'ensime-config)
 (require 'ensime-completion-util)
-(require 'ensime-auto-complete)
-(require 'ensime-company)
-(require 'ensime-sbt)
+
 (require 'ensime-inf)
 (require 'ensime-stacktrace)
 (require 'ensime-debug)
@@ -64,6 +57,14 @@
 (require 'ensime-ui)
 (require 'ensime-http)
 (require 'timer)
+
+;; should really be optional
+(require 'ensime-sbt)
+
+;; autoload ensime-ac-enable and ensime-company-enable so that the
+;; user can select which backend to use without loading both.
+(autoload 'ensime-company-enable "ensime-company")
+(autoload 'ensime-ac-enable "ensime-auto-complete")
 
 (defvar ensime-protocol-version "0.7")
 

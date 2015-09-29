@@ -28,7 +28,6 @@
 (require 'company)
 (require 'yasnippet)
 (require 'scala-mode2-syntax)
-(require 'auto-complete)
 (require 's)
 (require 'dash)
 
