@@ -109,23 +109,25 @@
 
 (defun ensime-run-after-save-hooks ()
   "Things to run whenever a source buffer is saved."
-  (when (and (ensime-connected-p) (ensime-analyzer-ready))
-    (condition-case err-info
-        (run-hooks 'ensime-source-buffer-saved-hook)
-      (error
-       (message
-        "Error running ensime-source-buffer-saved-hook: %s"
-        err-info)))))
+  (when (ensime-source-file-p)
+    (when (and (ensime-connected-p) (ensime-analyzer-ready))
+      (condition-case err-info
+          (run-hooks 'ensime-source-buffer-saved-hook)
+        (error
+         (message
+          "Error running ensime-source-buffer-saved-hook: %s"
+          err-info))))))
 
 (defun ensime-run-find-file-hooks ()
   "Things to run whenever a source buffer is opened."
-  (when (and (ensime-connected-p) (ensime-analyzer-ready))
-    (condition-case err-info
-        (run-hooks 'ensime-source-buffer-loaded-hook)
-      (error
-       (message
-        "Error running ensime-source-buffer-loaded-hook: %s"
-        err-info)))))
+  (when (ensime-source-file-p)
+    (when (and (ensime-connected-p) (ensime-analyzer-ready))
+      (condition-case err-info
+          (run-hooks 'ensime-source-buffer-loaded-hook)
+        (error
+         (message
+          "Error running ensime-source-buffer-loaded-hook: %s"
+          err-info))))))
 
 (defun ensime-save-buffer-no-hooks ()
   "Just save the buffer per usual, don't type-check!"

@@ -124,6 +124,30 @@
 		   (string= prefix (car candidates)))
 	  (car candidates))))))
 
+(defun ensime-call-completion-info (candidate is-scala)
+  "Returns a call-completion-info for the candidate, including details
+ required for expanding a parameter template."
+  (if is-scala
+      ;; Scala case is trivial: request the info by type id
+      (ensime-rpc-get-call-completion (get-text-property 0 'type-id candidate))
+
+    ;; TODO until we sort out ensime-rpc-get-call-completion
+    ;; for Java, use the candidate signature instead as a poor man's
+    ;; call completion info.
+    (let ((type-sig (get-text-property 0 'type-sig candidate)))
+      (let* ((sections (car type-sig))
+	     (return-type (cadr type-sig)))
+	`(:param-sections
+	  ,(mapcar
+	    (lambda (section)
+	      (list :params
+		    (mapcar
+		     (lambda (p) (let ((name (car p))
+				       (type-name (cadr p)))
+				   `(,name (:name ,type-name
+						  :full-name ,type-name))))
+		     section))) sections))))))
+
 (provide 'ensime-completion-util)
 
 ;; Local Variables:

@@ -110,7 +110,7 @@ saveClasspathTask := {
          (scala-version (plist-get config :scala-version))
          (server-env (or (plist-get config :server-env) ensime-default-server-env))
          (buffer (or (plist-get config :buffer) (concat ensime-default-buffer-prefix name)))
-         (server-java (file-name-as-directory (plist-get config :java-home)))
+         (server-java (file-name-as-directory (ensime--get-java-home config)))
          (server-flags (or (plist-get config :java-flags) ensime-default-java-flags)))
     (make-directory cache-dir 't)
 
@@ -126,6 +126,7 @@ saveClasspathTask := {
            (host "127.0.0.1")
            (port-fn (lambda () (ensime--read-portfile
                              (concat cache-dir "/port")))))
+
 
       ;; Surface the server buffer so user can observe the startup progress.
       (display-buffer (process-buffer server-proc) nil)

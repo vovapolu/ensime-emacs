@@ -60,6 +60,12 @@
       (error "Name in ensime configuration file appears to be unset"))
     name))
 
+(defun ensime--get-java-home (config)
+  (let ((value (plist-get config :java-home)))
+    (unless value
+      (error "java-home in ensime configuration file appears to be unset"))
+    value))
+
 (defun ensime-config-source-roots (conf)
   "Returns a list of all directories mentioned in :source-roots directives."
   (let ((subs (plist-get conf :subprojects)))
@@ -70,20 +76,43 @@
   (let ((cache-dir (ensime--get-cache-dir config)))
     (concat cache-dir "/dep-src/source-jars/")))
 
+(defvar ensime--cache-source-root-set nil)
+(defun ensime--source-root-set (conf no-ref-sources)
+  "Returns a hash set containing all source directories (expanded with
+ file-truename) of the give config."
+  (or
+   (cdr (assoc (list conf no-ref-sources) ensime--cache-source-root-set))
+
+   (let ((result (make-hash-table :test 'equal)))
+     (dolist (f (ensime-config-source-roots conf))
+       (when (file-directory-p f)
+	 (puthash (file-name-as-directory (file-truename f)) t result)))
+     (unless no-ref-sources
+       (-when-let (f (ensime-source-jars-dir conf))
+	 (when (file-directory-p f)
+	   (puthash (file-name-as-directory (file-truename f)) t result))))
+
+     (setq ensime--cache-source-root-set
+	   (cons (cons (list conf no-ref-sources) result)
+		 ensime--cache-source-root-set))
+
+     result)))
+
 (defun ensime-config-includes-source-file
     (conf file &optional no-ref-sources)
   "`t' if FILE is contained in `:source-roots' or the extracted dependencies.
 NO-REF-SOURCES allows skipping the extracted dependencies."
   (when file
-    (let ((source-roots
-	   (-filter
-	    'file-directory-p
-	    (append (ensime-config-source-roots conf)
-		    (unless no-ref-sources
-		      (-when-let (dir (ensime-source-jars-dir conf))
-                        (list dir)))))))
-      (-first (lambda (dir) (ensime-path-includes-dir-p file dir))
-	      source-roots))))
+    (let ((dir-set (ensime--source-root-set conf no-ref-sources)))
+      (let ((d (file-name-directory (expand-file-name file))))
+        (catch 'return
+          (while d
+            (let ((prev d))
+              (when (gethash (file-truename d) dir-set)
+                (throw 'return t))
+              (setq d (file-name-directory (directory-file-name d)))
+              (when (equal d prev)
+                (throw 'return nil)))))))))
 
 (defun ensime-config-find-file (file-name)
   "Search up the directory tree starting at file-name
@@ -137,7 +166,6 @@ NO-REF-SOURCES allows skipping the extracted dependencies."
 		  (error "Error reading configuration file, %s: %s" src error)
 		  )))))
         config))))
-
 
 (defun ensime-source-roots-from-config ()
   "Return all source directories from all subprojects"
@@ -210,4 +238,3 @@ only sbt projects are supported."
 
 ;; Local Variables:
 ;; End:
-
