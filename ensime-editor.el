@@ -5,6 +5,7 @@
   (require 'ensime-macros))
 
 (require 'dash)
+(require 'popup)
 
 (defvar ensime-compile-result-buffer-name "*ENSIME-Compilation-Result*")
 

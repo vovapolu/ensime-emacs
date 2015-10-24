@@ -160,7 +160,9 @@ where SYMBOL-TYPE is one of:
   :group 'ensime-ui)
 
 (defcustom ensime-completion-style 'company
-  "Should be one of 'company, 'auto-complete or nil."
+  "Should be one of 'company, 'auto-complete or nil.
+`company' is the most stable choice and if `auto-complete' is
+used it must be installed separately."
   :type 'symbol
   :group 'ensime-ui)
 

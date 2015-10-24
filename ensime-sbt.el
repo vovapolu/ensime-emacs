@@ -1,42 +1,15 @@
-;;; ensime-sbt.el --- SBT support for ENSIME
-;;
-;;;; License
-;;
-;;     Copyright (C) 2008 Raymond Paul Racine
-;;     Portions Copyright (C) Free Software Foundation
-;;     Portions Copyright (C) 2010 Aemon Cannon
-;;
-;;     Authors: Luke Amdor, Raymond Racine, Aemon Cannon
-;;
-;;     This file includes code from slime.el of the SLIME project
-;;     (also licensend under the GNU General Public License.) The
-;;     following copyrights therefore apply:
-;;
-;;     Copyright (C) 2003  Eric Marsden, Luke Gorrie, Helmut Eller
-;;     Copyright (C) 2004,2005,2006  Luke Gorrie, Helmut Eller
-;;     Copyright (C) 2007,2008,2009  Helmut Eller, Tobias C. Rittweiler
-;;
-;;
-;;     This program is free software; you can redistribute it and/or
-;;     modify it under the terms of the GNU General Public License as
-;;     published by the Free Software Foundation; either version 2 of
-;;     the License, or (at your option) any later version.
-;;
-;;     This program is distributed in the hope that it will be useful,
-;;     but WITHOUT ANY WARRANTY; without even the implied warranty of
-;;     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-;;     GNU General Public License for more details.
-;;
-;;     You should have received a copy of the GNU General Public
-;;     License along with this program; if not, write to the Free
-;;     Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
-;;     MA 02111-1307, USA.
+;;; ensime-sbt.el --- SBT support for ENSIME -*- lexical-binding: t -*-
 
+;; Copyright (C) 2015 ENSIME authors
+;; License: http://www.gnu.org/licenses/gpl.html
 
-;; Support for running sbt in inferior mode.
-;; 20090918 Suggestions from Florian Hars
-;; - Removed global manipulations.
-;; - Removed colorization attempts to use base sbt anis colorization.
+;;; Commentary:
+;;
+;;  SBT should be an optional system dependency of ENSIME (we try to
+;;  be build tool agnostic, even if we have a favourite) and ideally
+;;  all sbt-related content should be contained to this file.
+;;
+;;; Code:
 
 (eval-when-compile
   (require 'cl)
@@ -111,6 +84,4 @@
 
 (provide 'ensime-sbt)
 
-;; Local Variables:
-;; End:
-
+;;; ensime-sbt.el ends here

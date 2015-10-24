@@ -25,7 +25,13 @@
 (require 'ensime-completion-util)
 (require 'ensime-model)
 (require 'ensime-util)
-(require 'auto-complete)
+
+;; we don't explicitly depend on auto-complete, this file should
+;; really be released as a separate package.
+;; (require 'auto-complete)
+(autoload 'ac-define-source "auto-complete")
+(autoload 'ac-set-trigger-key "auto-complete")
+(autoload 'auto-complete-mode "auto-complete")
 
 (defcustom ensime-ac-enable-argument-placeholders t
   "If non-nil, insert placeholder arguments in the buffer on completion."
