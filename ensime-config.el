@@ -36,6 +36,12 @@
   (let ((connection (ensime-connection)))
     (ensime-config connection)))
 
+(defun ensime-process-for-config (config)
+  "Obtain the ENSIME Server process for the given config."
+  ;; this is a bit of a hack, we should always have ready access to this
+  (-first (lambda (p) (eq config (process-get p :ensime-config)))
+          ensime-server-processes))
+
 (defun ensime--get-cache-dir (config)
   (let ((cache-dir (plist-get config :cache-dir)))
     (unless cache-dir
