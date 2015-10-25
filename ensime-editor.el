@@ -412,8 +412,7 @@
 ;; Compilation on request
 
 (defun ensime-typecheck-current-file (&optional without-saving)
-  "Send a request for re-typecheck of current buffer to all ENSIME servers
- managing projects that contains the current buffer. By default, the buffer
+  "Re-typecheck the current buffer. By default, the buffer
  is saved first if it has unwritten modifications. With a prefix argument,
  the buffer isn't saved, instead the contents of the buffer is sent to the
  typechecker."
@@ -422,16 +421,13 @@
   (when (and (not without-saving) (buffer-modified-p))
     (ensime-write-buffer nil t))
 
-  ;; Send the reload request to all servers that might be interested.
-  (dolist (con (ensime-connections-for-source-file buffer-file-name t))
-    (setf (ensime-last-typecheck-run-time con) (float-time))
-    (let ((ensime-dispatching-connection con))
-      (if without-saving
-          (save-restriction
-            (widen)
-            (ensime-rpc-async-typecheck-buffer 'identity))
-        (progn
-          (ensime-rpc-async-typecheck-file buffer-file-name 'identity))))))
+  (setf (ensime-last-typecheck-run-time (ensime-connection)) (float-time))
+  (if without-saving
+      (save-restriction
+        (widen)
+        (ensime-rpc-async-typecheck-buffer 'identity))
+    (progn
+      (ensime-rpc-async-typecheck-file buffer-file-name 'identity))))
 
 (defun ensime-reload-open-files ()
   "Make the ENSIME server forget about all files ; reload .class files

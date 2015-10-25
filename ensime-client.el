@@ -141,9 +141,7 @@ overrides `ensime-buffer-connection'.")
   "Return the connection to use for ENSIME interaction in the current buffer.
  Return nil if there's no connection.
    * In most code we prefer (ensime-connection), which raises an error if
-     the connection is not present.
-   * This function is ambiguous if there's more than one ensime connection for
-     the current source file (shouldn't really happen in practice)."
+     the connection is not present."
   (or (ensime-conn-if-alive ensime-dispatching-connection)
       (ensime-conn-if-alive ensime-buffer-connection)
       (-when-let (conn (ensime-conn-if-alive
@@ -190,27 +188,18 @@ overrides `ensime-buffer-connection'.")
 (defun ensime-connection-visiting-buffers (conn)
   "Return a list of all buffers associated with the given
  connection."
-  (let ((result '()))
+  (let ((result '())
+        (ensime-dispatching-connection nil))
     (dolist (buf (buffer-list))
-      (let ((f (buffer-file-name buf)))
-        (when (and f (ensime-source-file-belongs-to-connection-p f conn))
-          (setq result (cons buf result)))))
+      (with-current-buffer buf
+        (when (and ensime-mode
+                   (eq conn (ensime-connection-or-nil)))
+          (push buf result))))
     result))
 
 (defun ensime-source-file-belongs-to-connection-p (file-in conn)
   "Does the given source file belong to the given connection(project)?"
   (ensime-config-includes-source-file (ensime-config conn) file-in))
-
-(defun ensime-connections-for-source-file (file-in &optional no-ref-sources)
-  "Return the connections corresponding to projects that contain
- the given file in their source trees."
-  (let ((result '()))
-    (dolist (conn ensime-net-processes)
-      (-when-let (conn (ensime-conn-if-alive conn))
-        (when (ensime-config-includes-source-file
-               (ensime-config conn) file-in no-ref-sources)
-          (setq result (cons conn result)))))
-    result))
 
 (defvar-local ensime--buffer-unrelated-server-procs nil
   "An optimization: server processes known to not be associated with the current

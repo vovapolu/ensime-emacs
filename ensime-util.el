@@ -129,16 +129,16 @@ argument is supplied) is a .scala or .java file."
  nil, where ensime-path-includes-dir-p will answer t.
  Note: This function assumes both file and dir actually exist."
   (let ((phys-dir (file-truename dir))
-	(d (file-name-directory (expand-file-name file))))
-   (catch 'return
+        (d (file-name-directory (expand-file-name file))))
+    (catch 'return
       (while d
-	(let ((prev d))
-	  (when (string-prefix-p phys-dir (file-truename d))
-	    (throw 'return t))
-	  (setq d (file-name-directory (directory-file-name d)))
-	  (when (equal d prev)
-	    (throw 'return nil))
-	  )))))
+        (let ((prev d))
+          (when (string-prefix-p phys-dir (file-truename d))
+            (throw 'return t))
+          (setq d (file-name-directory (directory-file-name d)))
+          (when (equal d prev)
+            (throw 'return nil))
+          )))))
 
 ; TODO deprecate and rewrite callers to use the cache-dir
 (defun ensime-temp-directory ()
