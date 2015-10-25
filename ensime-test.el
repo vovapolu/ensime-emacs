@@ -1252,6 +1252,10 @@
         (ensime-assert (member "blarg" candidates)))
 
       ;; exercize emacs CAPF function
+      ;; (which involves loading the ensime-autocomplete file and enabling CAPF)
+      (require 'ensime-auto-complete)
+      (add-hook 'completion-at-point-functions
+                'ensime-completion-at-point-function nil t)
       (ensime-test-eat-label "3")
       (completion-at-point)
       (ensime-assert-equal

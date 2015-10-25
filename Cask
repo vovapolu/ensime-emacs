@@ -27,8 +27,8 @@
 (package-file "ensime.el")
 
 (development
- ;; optional dependencies
- ;;(depends-on "auto-complete")
+ ;; optional dependencies (used in the tests)
+ (depends-on "auto-complete")
 
  ; genuine dev dependencies
  (depends-on "undercover"))

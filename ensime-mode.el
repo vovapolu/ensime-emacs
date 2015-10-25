@@ -228,17 +228,14 @@
   (if ensime-mode
       (progn
 
-	(pcase ensime-completion-style
-	  (`company
-	   (ensime-company-enable))
-	  (`auto-complete
-	   (ensime-ac-enable))
-	  (_ t))
-
-	;; Always add the cap function. Some users may prefer it,
-	;; and it may be useful in other completion modes (helm?).
-	(add-hook 'completion-at-point-functions
-		  'ensime-completion-at-point-function nil t)
+        (pcase ensime-completion-style
+          (`company
+           (ensime-company-enable))
+          (`auto-complete
+           (ensime-ac-enable)
+           (add-hook 'completion-at-point-functions
+                     'ensime-completion-at-point-function nil t))
+          (_ t))
 
         (easy-menu-add ensime-mode-menu ensime-mode-map)
 
@@ -273,7 +270,11 @@
 
         (ensime-refresh-all-note-overlays))
     (progn
-      (ensime-ac-disable)
+      (pcase ensime-completion-style
+        (`auto-complete
+         (ensime-ac-disable))
+        (_ t))
+
       (remove-hook 'after-save-hook 'ensime-run-after-save-hooks t)
 
       (remove-hook 'find-file-hook 'ensime-run-find-file-hooks t)
