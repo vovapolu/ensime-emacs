@@ -145,8 +145,10 @@ overrides `ensime-buffer-connection'.")
   (or (ensime-conn-if-alive ensime-dispatching-connection)
       (ensime-conn-if-alive ensime-buffer-connection)
       (-when-let (conn (ensime-conn-if-alive
-                        (ensime-owning-connection-for-source-file
-                         buffer-file-name)))
+                        (or (ensime-owning-connection-for-source-file
+                             ;; supports files or directories (e.g. dired)
+                             (or buffer-file-name default-directory))
+                            (ensime-owning-connection-for-rootdir default-directory))))
         ;; Cache the connection so lookup is fast next time.
         (setq ensime-buffer-connection conn)
         conn)))
@@ -238,6 +240,20 @@ overrides `ensime-buffer-connection'.")
 	(setq ensime--buffer-unrelated-connections ensime-net-processes)
 	nil
 	))))
+
+(defun ensime-owning-connection-for-rootdir (dir)
+  "Returns the first connection process with a `:root-dir' equal to DIR."
+  ;; This is to handle the case where the user expects commands like
+  ;; `ensime-reload' or `ensime-search' to work from dired in the root
+  ;; of the project. Don't search subdirectories of the root-dir as
+  ;; there may be embedded projects (e.g. the sbt meta-project).
+  (-find
+   (lambda (conn)
+     (-when-let (good-conn (ensime-conn-if-alive conn))
+       (let* ((config (ensime-config good-conn))
+              (root-dir (plist-get config :root-dir)))
+         (string= (file-name-as-directory root-dir) (expand-file-name dir)))))
+   ensime-net-processes))
 
 (defun ensime-interrupt-all-servers ()
   (-each ensime-server-processes
@@ -360,34 +376,11 @@ This doesn't mean it will connect right after Ensime is loaded."
     (set (make-local-variable 'truncate-lines) t)))
 
 (ensime-define-keys ensime-connection-list-mode-map
-		    ("g"         'ensime-update-connection-list)
-		    ((kbd "C-k") 'ensime-quit-connection-at-point)
-		    ("R"         'ensime-restart-connection-at-point))
+                    ("g"         'ensime-update-connection-list))
 
 (defun ensime-connection-at-point ()
   (or (get-text-property (point) 'ensime-connection)
       (error "No connection at point")))
-
-(defun ensime-quit-connection-at-point (connection)
-  (interactive (list (ensime-connection-at-point)))
-  (ensime-quit-connection connection)
-  (ensime-update-connection-list))
-
-(defun ensime-quit-connection (connection)
-  (ensime-rpc-shutdown-server)
-  (let ((end (time-add (current-time) (seconds-to-time 3))))
-    (while (memq connection ensime-net-processes)
-      (when (time-less-p end (current-time))
-	(message "Quit timeout expired.  Disconnecting.")
-	(delete-process connection))
-      (sit-for 0 100))
-    ))
-
-(defun ensime-restart-connection-at-point (connection)
-  (interactive (list (ensime-connection-at-point)))
-  (let ((ensime-dispatching-connection connection))
-    (ensime-restart-inferior-lisp)))
-
 
 (defun ensime-list-connections ()
   "Display a list of all connections."
@@ -1108,9 +1101,6 @@ copies. All other objects are used unchanged. List must not contain cycles."
      (kill-buffer ensime-refactor-info-buffer-name)
      result)))
 
-
-(defun ensime-rpc-shutdown-server ()
-  (ensime-eval `(swank:shutdown-server)))
 
 (defun ensime-rpc-symbol-designations (file start end requested-types continue)
   (while (not (ensime-protocol-version))

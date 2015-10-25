@@ -166,14 +166,8 @@ saveClasspathTask := {
   "Re-initialize the project with the current state of the config file.
 Analyzer will be restarted."
   (interactive)
-  (let* ((conn (ensime-connection-or-nil))
-         (server-process (ensime-owning-server-process-for-source-file (buffer-file-name)))
-         (buf (when server-process (process-buffer server-process))))
-    (when conn
-      (catch (ensime-shutdown)))
-    (when buf
-      (kill-buffer buf))
-    (ensime)))
+  (ensime-shutdown)
+  (ensime))
 
 (defun ensime--maybe-start-server (buffer java-home scala-version flags env config-file cache-dir)
   "Return a new or existing server process."
@@ -312,11 +306,14 @@ CACHE-DIR is the server's persistent output directory."
                  ensime--sbt-start-template))
 
 
-(defun ensime-shutdown()
-  "Request that the current ENSIME server kill itself."
+(defun ensime-shutdown ()
+  "Terminate the associated ENSIME server (equivalent to killing its buffer)."
   (interactive)
-  (when (ensime-connected-p)
-    (ensime-quit-connection (ensime-connection))))
+  (let* ((config (ensime-config-for-buffer))
+         (server-process (and config (ensime-process-for-config config))))
+    (if (not server-process)
+        (error "Couldn't find the ENSIME server for this buffer.")
+      (kill-buffer (process-buffer server-process)))))
 
 (defun ensime-configured-project-root ()
   "Return root path of the current project as defined in the
