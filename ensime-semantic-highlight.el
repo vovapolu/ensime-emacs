@@ -121,7 +121,7 @@
      (mapcar 'car ensime-sem-high-faces)
      `(lambda (info)
         (ensime-sem-high-clear-region ,beg ,end)
-        (ensime-sem-high-apply-properties info)
+        (when info (ensime-sem-high-apply-properties info))
         (ensime-event-sig :region-sem-highlighted nil)))))
 
 (defun ensime-sem-high-inspect-highlight ()
@@ -148,4 +148,3 @@
 
 ;; Local Variables:
 ;; End:
-

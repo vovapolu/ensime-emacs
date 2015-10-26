@@ -77,7 +77,6 @@ be used later to give contextual help when entering arguments."
   (let* (;; When called by auto-complete-mode, grab from dynamic environment.
 	 (candidate (or candidate-in candidate))
 	 (name candidate)
-	 (type-id (get-text-property 0 'type-id candidate))
 	 (is-callable (get-text-property 0 'is-callable candidate))
 	 (to-insert (get-text-property 0 'to-insert candidate))
 	 (name-start-point (- (point) (length name))))
@@ -88,11 +87,12 @@ be used later to give contextual help when entering arguments."
       (delete-char (- (length name)))
       (insert to-insert))
 
-    ;; If this member is callable, use the type-id to lookup call completion
+    ;; If this member is callable, lookup call completion
     ;; information to show parameter hints.
     (when is-callable
 
-      (let* ((call-info (ensime-rpc-get-call-completion type-id))
+      (let* ((call-info (ensime-call-completion-info
+			 candidate (ensime-scala-file-p buffer-file-name)))
 	     (param-sections (ensime-type-param-sections call-info)))
 	(when (and call-info param-sections)
 

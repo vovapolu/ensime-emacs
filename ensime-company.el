@@ -133,12 +133,12 @@
   (let* (;; When called by auto-complete-mode, grab from dynamic environment.
 	 (candidate (or candidate-in candidate))
 	 (name candidate)
-	 (type-id (get-text-property 0 'type-id candidate))
 	 (is-callable (get-text-property 0 'is-callable candidate))
 	 (to-insert (get-text-property 0 'to-insert candidate))
 	 (name-start-point (- (point) (length name)))
 	 (call-info
-	  (when is-callable (ensime-rpc-get-call-completion type-id)))
+	  (when is-callable (ensime-call-completion-info
+			     candidate (ensime-scala-file-p buffer-file-name))))
 	 (param-sections
 	  (when is-callable
 	    (-filter
@@ -152,7 +152,6 @@
 			     (car param-sections) :params)))
 	       (null (string-match "[A-z]" name))))
 	 (is-field-assigner (s-ends-with? "_=" name)))
-
 
     (when is-field-assigner
       (delete-char (- 2))
