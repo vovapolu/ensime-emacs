@@ -175,11 +175,11 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
          :java (concat (plist-get config :java-home) "/bin/java")
          :java-flags (or (plist-get config :java-flags) ensime-default-java-flags)
          :classpath (ensime--build-classpath
-                     (apply #'append
-                            (ensime--scan-classpath (ensime-read-from-file (ensime--classpath-file (plist-get config :scala-version)))
-                                                    "\\(scala-compiler\\|scala-reflect\\)-[.[:digit:]]+\\.jar$")
-                            (funcall get-deps config)
-                            (mapcar get-deps (plist-get config :subprojects)))))
+                     (delete-dups (apply #'append
+                                         (ensime--scan-classpath (ensime-read-from-file (ensime--classpath-file (plist-get config :scala-version)))
+                                                                 "\\(scala-compiler\\|scala-reflect\\)-[.[:digit:]]+\\.jar$")
+                                         (funcall get-deps config)
+                                         (mapcar get-deps (plist-get config :subprojects))))))
       (error "No ensime config available"))))
 
 (defun ensime-inf-switch ()
