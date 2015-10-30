@@ -29,6 +29,7 @@
 (development
  ;; optional dependencies (used in the tests)
  (depends-on "auto-complete")
+ ;;(depends-on "expand-region")
 
  ; genuine dev dependencies
  (depends-on "undercover"))
