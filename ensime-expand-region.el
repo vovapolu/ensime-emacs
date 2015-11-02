@@ -19,7 +19,7 @@
 (require 'ensime-mode)
 (require 'ensime-client)
 (require 'ensime-editor)
-(require 'expand-region)
+(require 'expand-region-core)
 
 (defun ensime-expand-region-mark-syntactic-context ()
   "Mark the next outer syntactic context."
