@@ -510,7 +510,7 @@
   (when ensime--test-pending-rpcs
     (message "WARNING no response to messages: %s . Waiting some more."
 	     ensime--test-pending-rpcs)
-    (sleep-for 10))
+    (sleep-for 1))
   (if ensime--test-pending-rpcs
       (progn
         (message "ERROR no response to messages: %s"
@@ -1036,7 +1036,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
      (ensime-test-with-proj
       (proj src-files)
       (setq ensime--test-cached-project proj)
@@ -1053,7 +1054,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :indexer-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :indexer-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (find-file (car src-files))
@@ -1079,7 +1081,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :indexer-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :indexer-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (find-file (car src-files))
@@ -1104,7 +1107,8 @@
       (ensime-test-init-proj proj))
 
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (find-file (car src-files))
@@ -1194,7 +1198,8 @@
            (src-files (plist-get proj :src-files)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       ;; object method completion
@@ -1251,7 +1256,8 @@
            (src-files (plist-get proj :src-files)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
 
@@ -1316,7 +1322,8 @@
            (src-files (plist-get proj :src-files)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       ;; Expand simple, two argument list.
@@ -1471,7 +1478,8 @@
            (src-files (plist-get proj :src-files)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
      (ensime-test-with-proj
       (proj src-files)
 
@@ -1507,7 +1515,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (ensime-refactor-organize-imports)))
@@ -1545,7 +1554,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       ;; refactor-rename needs all files to be typechecked
@@ -1606,7 +1616,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       ;; find-references requires all files to be typechecked
@@ -1647,7 +1658,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (ensime-typecheck-all)))
@@ -1676,7 +1688,9 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (ensime-typecheck-all)))
@@ -1714,7 +1728,8 @@
                                  ""))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (find-file (car src-files))
@@ -1736,7 +1751,8 @@
                   ensime-tmp-project-hello-world)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (let ((info (ensime-rpc-inspect-package-by-path
@@ -1755,7 +1771,8 @@
                   ensime-tmp-project-hello-world)))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (let* ((notes (ensime-all-notes)))
@@ -1788,7 +1805,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (goto-char (ensime-test-before-label "1"))
@@ -1805,7 +1823,8 @@
    ;;                ensime-tmp-project-hello-world)))
    ;;    (ensime-test-init-proj proj))
 
-   ;;  ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+   ;;  ((:connected))
+   ;;  ((:compiler-ready :full-typecheck-finished :indexer-ready)
    ;;   (ensime-test-with-proj
    ;;    (proj src-files)
    ;;    ;; Prevent a previous search from affecting this test
@@ -1844,7 +1863,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
      (ensime-test-with-proj
       (proj src-files)
       (goto-char 1)
@@ -1872,7 +1892,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (ensime-test-eat-label "1")
@@ -1939,7 +1960,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished :region-sem-highlighted)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :region-sem-highlighted)
      (ensime-test-with-proj
       (proj src-files)
       (let ((check-sym-is (lambda (sym-type)
@@ -2009,7 +2031,8 @@
                                  "}"))))))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
 
@@ -2055,7 +2078,8 @@
       (assert (directory-files (concat (plist-get proj :target) "/test") nil "class$"))
       (ensime-test-init-proj proj))
 
-    ((:connected :compiler-ready :full-typecheck-finished)
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
       (ensime-rpc-debug-set-break buffer-file-name 7)
@@ -2147,7 +2171,9 @@
 	(src-files (plist-get proj :src-files)))
    (assert ensime-sbt-command)
    (ensime-test-init-proj proj))
- ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+ 
+ ((:connected))
+ ((:compiler-ready :full-typecheck-finished :indexer-ready)
   (ensime-test-with-proj
    (proj src-files)
    (dolist
@@ -2207,7 +2233,9 @@
 	(src-files (plist-get proj :src-files)))
    (assert ensime-sbt-command)
    (ensime-test-init-proj proj))
- ((:connected :compiler-ready :full-typecheck-finished :indexer-ready)
+
+ ((:connected))
+ ((:compiler-ready :full-typecheck-finished :indexer-ready)
   (ensime-test-with-proj
    (proj src-files)
    (dolist
