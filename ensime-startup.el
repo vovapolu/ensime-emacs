@@ -370,7 +370,7 @@ defined."
        ;; until we know the protocol version. This shouldn't be async,
        ;; but making it sync gives us "error in timer" errors.
        '(swank:connection-info)
-       (ensime-curry #'ensime-handle-connection-info c)))))
+       'ensime-handle-connection-info))))
 
 (defun ensime-timer-call (fun &rest args)
   "Call function FUN with ARGS, reporting all errors.
@@ -384,16 +384,6 @@ defined."
   "Abort connection the current connection attempt."
   (interactive)
   (setq ensime--abort-connection 't))
-
-(defun ensime-init-project (conn)
-  "Notify the server that we are ready for project events."
-  (cond
-   ;; TODO(back_compat)
-   ((version<= (ensime-protocol-version conn) "0.8.9")
-    (ensime-eval-async `(swank:init-project (:name "NA")) 'identity))
-
-   ((version<= (ensime-protocol-version conn) "0.8.14")
-    (ensime-eval-async `(swank:init-project) 'identity))))
 
 
 (provide 'ensime-startup)

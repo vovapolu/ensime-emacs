@@ -56,11 +56,6 @@
   :prefix "ensime-"
   :group 'ensime)
 
-(defcustom ensime-connected-hook nil
-  "List of functions to call when ENSIME connects to Lisp."
-  :type 'hook
-  :group 'ensime-server)
-
 (defcustom ensime-sbt-command
   (executable-find "sbt")
   "Location of the sbt executable for starting the server."

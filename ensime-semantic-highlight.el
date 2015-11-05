@@ -111,7 +111,9 @@
   (interactive)
   (let ((bufs (ensime-connection-visiting-buffers (ensime-connection))))
     (dolist (buf bufs)
-      (ensime-sem-high-refresh-buffer buf))))
+      (when (and (buffer-live-p buf)  ;; Guard against side effects of previous iterations
+		 (ensime-source-file-p (buffer-file-name buf)))
+	(ensime-sem-high-refresh-buffer buf)))))
 
 (defun ensime-sem-high-refresh-region (beg end)
   "Refresh semantic highlighting for the given region."
