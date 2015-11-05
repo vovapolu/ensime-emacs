@@ -345,24 +345,21 @@ This doesn't mean it will connect right after Ensime is loaded."
          (ensime-dispatching-connection process))
     (ensime-setup-connection process)))
 
-
-(defun ensime-handle-connection-info (connection info)
+(defun ensime-handle-connection-info (info)
   "Initialize CONNECTION with INFO received from Lisp."
-  (ensime-event-sig :connected info)
-  (let ((ensime-dispatching-connection connection))
-    (destructuring-bind (&key pid server-implementation version
-                              &allow-other-keys) info
-      (setf (ensime-pid) pid)
-      (setf (ensime-protocol-version) version)
-      (destructuring-bind (&key name) server-implementation
-        (setf (ensime-server-implementation-name) name
-              (ensime-connection-name) (ensime-generate-connection-name name)))
-      ))
 
-  (run-hooks 'ensime-connected-hook)
+  (assert (ensime-connection-or-nil))
+
+  (destructuring-bind (&key pid implementation version &allow-other-keys) info
+    (setf (ensime-pid) pid)
+    (setf (ensime-protocol-version) version)
+    (destructuring-bind (&key name) implementation
+      (setf (ensime-server-implementation-name) name
+	    (ensime-connection-name)
+	    (ensime-generate-connection-name name))))
   (message "Connected to ENSIME speaking protocol %s, please wait while the project is loaded."
 	   (ensime-protocol-version))
-  (ensime-init-project connection))
+  (ensime-event-sig :connected info))
 
 ;;;;; Connection listing
 
@@ -762,6 +759,7 @@ copies. All other objects are used unchanged. List must not contain cycles."
                                            code detail))
                             (goto-char (point-min)))
                            (error "Invalid protocol message"))
+			  
                           ))))
 
 (defun ensime-send (sexp)
@@ -1103,15 +1101,6 @@ copies. All other objects are used unchanged. List must not contain cycles."
 
 
 (defun ensime-rpc-symbol-designations (file start end requested-types continue)
-  (while (not (ensime-protocol-version))
-    ;; workaround startup timing issue
-    (message "Waiting for connection-info")
-    (sit-for 1))
-  (when (version< (ensime-protocol-version) "0.8.16")
-    (setq requested-types (remove 'implicitParams requested-types))
-    (setq requested-types (remove 'implicitConversion requested-types)))
-  (when (version< (ensime-protocol-version) "0.8.17")
-    (setq requested-types (remove 'deprecated requested-types)))
   (ensime-eval-async `(swank:symbol-designations ,file ,start ,end ,requested-types)
 		     continue))
 
