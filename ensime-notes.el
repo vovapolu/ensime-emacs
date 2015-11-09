@@ -146,8 +146,8 @@ any buffer visiting the given file."
 (defface ensime-implicit-highlight
   (if (facep 'flymake-infoline)
       '((t (:inherit flymake-infoline)))
-  '((((supports :underline (:style wave)))
-     :underline (:style wave :color "blue"))
+  '((((supports :underline (:style line)))
+     :underline (:style line :color "light gray"))
     (t :inherit flymake-warnline)))
   "Face used for marking a region where an implicit conversion was applied."
   :group 'ensime-ui)
