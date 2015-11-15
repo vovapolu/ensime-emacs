@@ -231,6 +231,12 @@ name (case sensitive), and CONFIG-PLIST has the same format as
   :type 'alist
   :group 'ensime-ui)
 
+(defcustom ensime-implicit-gutter-icons t
+  "If non-nil, Ensime will provide gutter icons for implicit conversions
+and parameters."
+  :type 'boolean
+  :group 'ensime-ui)
+
 (provide 'ensime-vars)
 
 ;; Local Variables:
