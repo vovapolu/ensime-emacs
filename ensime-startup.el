@@ -160,7 +160,7 @@ saveClasspathTask := {
       (when (and (>= now (+ ensime-last-change-time ensime-typecheck-idle-interval))
                  (>= now earliest-allowed-typecheck)
                  (< last-typecheck ensime-last-change-time))
-        (ensime-typecheck-current-file t)
+        (ensime-typecheck-current-buffer)
         (ensime-sem-high-refresh-hook)))))
 
 (defun ensime-reload ()

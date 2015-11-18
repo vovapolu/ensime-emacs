@@ -411,23 +411,22 @@
 
 ;; Compilation on request
 
-(defun ensime-typecheck-current-file (&optional without-saving)
-  "Re-typecheck the current buffer. By default, the buffer
- is saved first if it has unwritten modifications. With a prefix argument,
- the buffer isn't saved, instead the contents of the buffer is sent to the
- typechecker."
+(defun ensime-typecheck-current-buffer ()
+  "Re-typecheck the current buffer. If the buffer is dirty, it will be written
+ to a temp file and that file will be checked."
   (interactive "P")
-
-  (when (and (not without-saving) (buffer-modified-p))
-    (ensime-write-buffer nil t))
-
   (setf (ensime-last-typecheck-run-time (ensime-connection)) (float-time))
-  (if without-saving
+  (if (buffer-modified-p)
       (save-restriction
         (widen)
         (ensime-rpc-async-typecheck-buffer 'identity))
     (progn
       (ensime-rpc-async-typecheck-file buffer-file-name 'identity))))
+
+(defun ensime-save-and-typecheck-current-buffer ()
+  "A compatibility shim. Writes the buffer and then invokes ensime-typecheck-current-buffer."
+  (ensime-write-buffer nil t)
+  (ensime-typecheck-current-buffer))
 
 (defun ensime-reload-open-files ()
   "Make the ENSIME server forget about all files ; reload .class files
@@ -438,8 +437,8 @@ currently open in emacs."
   (ensime-rpc-unload-all)
   (message "Reloading open files...")
   (setf (ensime-last-typecheck-run-time (ensime-connection)) (float-time))
-  (let ((files (mapcar #'buffer-file-name
-                       (ensime-connection-visiting-buffers (ensime-connection)))))
+  (let* ((buffers (ensime-connection-visiting-buffers (ensime-connection)))
+	 (files (-filter #'file-exists-p (-map #'buffer-file-name buffers))))
     (ensime-rpc-async-typecheck-files files 'identity)))
 
 (defun ensime-typecheck-all ()
@@ -571,7 +570,7 @@ currently open in emacs."
 		   (ensime-strip-dollar-signs
 		    (ensime-kill-txt-props selected-name))))
 	      (ensime-insert-import qual-name)
-	      (ensime-typecheck-current-file t))))))))
+	      (ensime-typecheck-current-buffer))))))))
 
 ;; Source Formatting
 
@@ -618,7 +617,7 @@ currently open in emacs."
                 (clear-visited-file-modtime)
                 (set-buffer-modified-p nil))
               (when typecheck
-                (ensime-typecheck-current-file)))))))
+                (ensime-save-and-typecheck-current-buffer)))))))
     (goto-char pt)))
 
 ;; Expand selection

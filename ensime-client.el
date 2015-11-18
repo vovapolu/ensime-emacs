@@ -104,7 +104,7 @@ This is automatically synchronized from Lisp.")
   "Current number of warnings in project.")
 
 (ensime-def-connection-var ensime-last-typecheck-run-time 0
-  "Last time `ensime-typecheck-current-file' was run.")
+  "Last time `ensime-typecheck-current-buffer' was run.")
 
 (ensime-def-connection-var ensime-rex-continuations '()
   "List of (ID . FUNCTION) continuations waiting for RPC results.")
@@ -203,43 +203,25 @@ overrides `ensime-buffer-connection'.")
   "Does the given source file belong to the given connection(project)?"
   (ensime-config-includes-source-file (ensime-config conn) file-in))
 
-(defvar-local ensime--buffer-unrelated-server-procs nil
-  "An optimization: server processes known to not be associated with the current
- buffer.")
 (defun ensime-owning-server-process-for-source-file (source-file)
   "Returns the first server process with a source-root that contains
   file-in."
-  (when (-difference ensime-server-processes ensime--buffer-unrelated-server-procs)
-    (let ((found (-find
-		  (lambda (proc)
-		    (-when-let (good-proc (ensime-proc-if-alive proc))
-                      (ensime-config-includes-source-file
-                       (process-get good-proc :ensime-config) source-file)))
-		  ensime-server-processes)))
-      (if found found
-	;; Otherwise remember the procs we've already checked.
-	(setq ensime--buffer-unrelated-server-procs ensime-server-processes)
-	nil
-	))))
+  (-find
+   (lambda (proc)
+     (-when-let (good-proc (ensime-proc-if-alive proc))
+       (ensime-config-includes-source-file
+	(process-get good-proc :ensime-config) source-file)))
+   ensime-server-processes))
 
-(defvar-local ensime--buffer-unrelated-connections nil
-  "An optimization: connections known to not be associated with the current
- buffer.")
 (defun ensime-owning-connection-for-source-file (source-file)
   "Returns the first connection process with a source-root that contains
   source-file."
-  (when (-difference ensime-net-processes ensime--buffer-unrelated-connections)
-    (let ((found (-find
-		  (lambda (conn)
-		    (-when-let (good-conn (ensime-conn-if-alive conn))
-                      (ensime-config-includes-source-file
-                       (ensime-config good-conn) source-file)))
-		  ensime-net-processes)))
-      (if found found
-	;; Otherwise remember the connections we've already checked.
-	(setq ensime--buffer-unrelated-connections ensime-net-processes)
-	nil
-	))))
+    (-find
+     (lambda (conn)
+       (-when-let (good-conn (ensime-conn-if-alive conn))
+	 (ensime-config-includes-source-file
+	  (ensime-config good-conn) source-file)))
+     ensime-net-processes))
 
 (defun ensime-owning-connection-for-rootdir (dir)
   "Returns the first connection process with a `:root-dir' equal to DIR."
@@ -252,7 +234,8 @@ overrides `ensime-buffer-connection'.")
      (-when-let (good-conn (ensime-conn-if-alive conn))
        (let* ((config (ensime-config good-conn))
               (root-dir (plist-get config :root-dir)))
-         (string= (file-name-as-directory root-dir) (expand-file-name dir)))))
+         (string= (file-name-as-directory root-dir)
+		  (file-name-as-directory (expand-file-name dir))))))
    ensime-net-processes))
 
 (defun ensime-interrupt-all-servers ()

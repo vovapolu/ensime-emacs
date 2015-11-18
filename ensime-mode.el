@@ -35,7 +35,7 @@
       (define-key prefix-map (kbd "C-v b") 'ensime-inf-eval-buffer)
       (define-key prefix-map (kbd "C-v l") 'ensime-inf-load-file)
 
-      (define-key prefix-map (kbd "C-c c") 'ensime-typecheck-current-file)
+      (define-key prefix-map (kbd "C-c c") 'ensime-typecheck-current-buffer)
       (define-key prefix-map (kbd "C-c a") 'ensime-typecheck-all)
       (define-key prefix-map (kbd "C-c r") 'ensime-reload-open-files)
       (define-key prefix-map (kbd "C-c e") 'ensime-show-all-errors-and-warnings)
@@ -161,7 +161,7 @@
      ["Undo source change" ensime-undo-peek])
 
     ("Typecheck"
-     ["Typecheck file" ensime-typecheck-current-file]
+     ["Typecheck file" ensime-typecheck-current-buffer]
      ["Typecheck project" ensime-typecheck-all]
      ["Reload typechecker" ensime-reload-open-files]
      ["Show all errors and warnings" ensime-show-all-errors-and-warnings])
@@ -247,7 +247,7 @@
 	(add-hook 'find-file-hook 'ensime-run-find-file-hooks nil t)
 
         (add-hook 'ensime-source-buffer-saved-hook
-                  'ensime-typecheck-current-file)
+                  'ensime-typecheck-current-buffer)
 
         (add-hook 'ensime-source-buffer-saved-hook
                   'ensime-sem-high-refresh-hook t)
@@ -256,7 +256,7 @@
                   'ensime-sem-high-refresh-hook t)
 
         (add-hook 'ensime-source-buffer-loaded-hook
-                  'ensime-typecheck-current-file)
+                  'ensime-typecheck-current-buffer)
 
         (add-hook 'after-change-functions
                   'ensime-after-change-function nil t)
@@ -283,7 +283,7 @@
       (remove-hook 'find-file-hook 'ensime-run-find-file-hooks t)
 
       (remove-hook 'ensime-source-buffer-saved-hook
-                   'ensime-typecheck-current-file)
+                   'ensime-typecheck-current-buffer)
 
       (remove-hook 'ensime-source-buffer-saved-hook
                    'ensime-sem-high-refresh-hook)
@@ -291,8 +291,8 @@
       (remove-hook 'ensime-source-buffer-loaded-hook
                    'ensime-sem-high-refresh-hook)
 
-      (remove-hook 'ensime-source-buffer-loaded-hook
-                   'ensime-typecheck-current-file)
+     (remove-hook 'ensime-source-buffer-loaded-hook
+                   'ensime-typecheck-current-buffer)
 
       (remove-hook 'after-change-functions
                    'ensime-after-change-function t)

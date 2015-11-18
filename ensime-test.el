@@ -92,7 +92,7 @@
        (delete-file ,name))))
 
 (defvar ensime--test-scala-version
-  (getenv "SCALA_VERSION"))
+  (or (getenv "SCALA_VERSION") "2.11.4"))
 
 (defun ensime--test-scala-major-version ()
   (mapconcat 'int-to-string
@@ -124,7 +124,10 @@
 			      :cache-dir ,cache-dir
 			      :name "test"
 			      :scala-version ,ensime--test-scala-version
-			      :java-home ,(getenv "JDK_HOME")
+			      :java-home ,(or (getenv "JDK_HOME")
+					      (when (eq system-type 'darwin)
+						(s-trim (shell-command-to-string
+							 "/usr/libexec/java_home"))))
 			      :java-flags ("-Xmx1g" "-Xss2m" "-XX:MaxPermSize=128m")
 			      :subprojects ((:name ,sp-name
 						   :module-name ,sp-name
@@ -502,7 +505,9 @@
   (let ((src-files (plist-get proj :src-files)))
     (ensime-test-var-put :proj proj)
     (ensime-test-var-put :pending-rpcs nil)
-    (find-file (car src-files))
+    (if src-files
+	(find-file (car src-files))
+      (dired (plist-get proj :root-dir)))
     (unless no-init (ensime))))
 
 (defun ensime-test-cleanup (proj &optional no-del)
@@ -1336,7 +1341,7 @@
 	(insert "2") (yas-next-field) (insert "3") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "d(2, 3)"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1351,7 +1356,7 @@
 	(insert "5") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "+ 5"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1366,7 +1371,7 @@
 	(insert "8") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties (- pt 1) (point)) " + 8"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1381,7 +1386,7 @@
 	(insert "str") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "ck(str)"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1396,7 +1401,7 @@
 	(insert "i") (yas-next-field) (insert "str") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "ck { i => str }"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1411,7 +1416,7 @@
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "me { ")
 	(insert "\"bla\""))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1426,7 +1431,7 @@
 	(insert "2") (yas-next-field)
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "ld = 2"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1440,7 +1445,7 @@
 	(ensime--yasnippet-complete-action (car (member "hashCode" candidates)))
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "de()"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1454,7 +1459,7 @@
 	(ensime--yasnippet-complete-action (car (member "toLong" candidates)))
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "ng"))
-      (ensime-typecheck-current-file)))
+      (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
      (ensime-test-with-proj
@@ -1849,6 +1854,63 @@
    ;;    (ensime-search-quit)
    ;;    (ensime-test-cleanup proj))))
 
+
+   (ensime-async-test
+    "Test misc operations on unsaved source file."
+    (let* ((proj (ensime-create-tmp-project '())))
+      (ensime-test-init-proj proj))
+
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+      (let ((path (expand-file-name "src/main/scala/test/Test.scala" (plist-get proj :root-dir))))
+	(ensime-test-var-put :path path)
+        (make-directory (file-name-directory path) t)
+        (find-file path)
+	(ensime-mode)
+        (ensime-assert-equal (ensime-owning-connection-for-source-file path)
+                             (ensime-owning-connection-for-rootdir
+			      (plist-get proj :root-dir)))
+        (insert (ensime-test-concat-lines
+                                 "package test"
+                                 "class A(value:String){"
+                                 "def hello(){"
+                                 "  print/*1*/"
+				 "  println(1)"
+                                 "}"
+                                 "}"))
+
+        (ensime-assert (= (length (ensime-all-notes)) 0))
+
+	;; Check that completions work without saving
+	(ensime-test-eat-label "1")
+	(let* ((candidates (ensime--test-completions)))
+	  (ensime-assert (member "println" candidates)))
+
+	;; generate compilation error
+	(insert "blablabla")
+
+	(ensime-typecheck-current-buffer)
+
+	;; Verify nothing we did caused the file to be written.
+	(ensime-assert (not (file-exists-p path)))
+
+	)))
+
+
+    ((:full-typecheck-finished)
+     (ensime-test-with-proj
+      (proj src-files)
+
+      (find-file (ensime-test-var-get :path))
+      (set-buffer-modified-p nil)
+      (kill-buffer nil)
+
+      (ensime-assert (> (length (ensime-all-notes)) 0))
+      (ensime-test-cleanup proj)))
+    )
+
    (ensime-async-test
     "Test add import."
     (let* ((proj (ensime-create-tmp-project
@@ -2115,142 +2177,145 @@
 		   :pc-location (:file ,pc-file :line 7)
 		   :this-object-id "NA"))))
       (ensime-rpc-debug-stop)
-(ensime-test-cleanup proj))))
+      (ensime-test-cleanup proj))))
 
-(ensime-async-test
- "REPL without server."
- (progn
-   (ensime-test-init-proj
-    (ensime-create-tmp-project '((:name "test.scala" :contents "")))
-    t)
-   (let* ((ensime-prefer-noninteractive t)
-	  (proc (ensime-inf-run-scala)))
-     (ensime-test-var-put :repl-proc proc)))
- ((:inf-repl-ready)
-  (ensime-inf-quit-interpreter))
- ((:inf-repl-exit)
-  (let ((proc (ensime-test-var-get :repl-proc)))
-    (ensime-assert-equal (process-status proc) 'exit)
-    (ensime-assert-equal (process-exit-status proc) 0)
-    (ensime-test-with-proj (proj src-files) (ensime-cleanup-tmp-project proj)))))
+   (ensime-async-test
+    "REPL without server."
+    (progn
+      (ensime-test-init-proj
+       (ensime-create-tmp-project '((:name "test.scala" :contents "")))
+       t)
+      (let* ((ensime-prefer-noninteractive t)
+	     (proc (ensime-inf-run-scala)))
+	(ensime-test-var-put :repl-proc proc)))
+    ((:inf-repl-ready)
+     (ensime-inf-quit-interpreter))
+    ((:inf-repl-exit)
+     (let ((proc (ensime-test-var-get :repl-proc)))
+       (ensime-assert-equal (process-status proc) 'exit)
+       (ensime-assert-equal (process-exit-status proc) 0)
+       (ensime-test-with-proj (proj src-files) (ensime-cleanup-tmp-project proj)))))
 
-(ensime-async-test
- "Ensime unit test dwim."
- (let* ((proj (ensime-create-tmp-project
-	       `((:name
-		  "atest/ExampleSpec.scala"
-		  :relative-to "src/test/scala"
-		  :contents ,(ensime-test-concat-lines
-			      "package atest"
-			      "import collection.mutable.Stack"
-			      "import org.scalatest._"
-			      "class ExampleSpec extends FlatSpec with Matchers {"
+   (ensime-async-test
+    "Ensime unit test dwim."
+    (let* ((proj (ensime-create-tmp-project
+		  `((:name
+		     "atest/ExampleSpec.scala"
+		     :relative-to "src/test/scala"
+		     :contents ,(ensime-test-concat-lines
+				 "package atest"
+				 "import collection.mutable.Stack"
+				 "import org.scalatest._"
+				 "class ExampleSpec extends FlatSpec with Matchers {"
 
-			      "  \"A Stack\" should \"pop values in last-in-first-out order\" in {"
-			      "    val stack = new Stack[Int]"
-			      "    stack.push(1)"
-			      "    stack.push(2)"
-			      "    stack.pop() should be (2)"
-			      "    stack.pop() should be (1)"
-			      "  }"
+				 "  \"A Stack\" should \"pop values in last-in-first-out order\" in {"
+				 "    val stack = new Stack[Int]"
+				 "    stack.push(1)"
+				 "    stack.push(2)"
+				 "    stack.pop() should be (2)"
+				 "    stack.pop() should be (1)"
+				 "  }"
 
-			      "  it should \"throw NoSuchElementException if an empty stack is popped\" in {"
-			      "    val emptyStack = new Stack[Int]"
-			      "    a [NoSuchElementException] should be thrownBy {"
-			      "    emptyStack.pop()"
-			      "    }"
-			      "  }"
-			      "}"))
-		 (:name "build.sbt"
-			:relative-to ""
-			:contents ,(ensime-test-concat-lines
-				    (concat "scalaVersion := \"" ensime--test-scala-version "\"")
-				    (concat
-				     "libraryDependencies += \"org.scalatest\" % \"scalatest_"
-				     (ensime--test-scala-major-version) "\" % \"2.2.4\" % \"test\""))))))
-	(src-files (plist-get proj :src-files)))
-   (assert ensime-sbt-command)
-   (ensime-test-init-proj proj))
- 
- ((:connected))
- ((:compiler-ready :full-typecheck-finished :indexer-ready)
-  (ensime-test-with-proj
-   (proj src-files)
-   (dolist
-       (tests '(("test" ensime-sbt-do-test-dwim)
-		("testQuick" ensime-sbt-do-test-quick-dwim)
-		("test-only atest.ExampleSpec" ensime-sbt-do-test-only-dwim)))
-     (let* ((module (-> (plist-get proj :config)
-			(plist-get :subprojects)
-			-first-item
-			(plist-get :name)))
-	    (command (s-concat module "/" (car tests)))
-	    (f (cdr tests)))
-       (apply f)
-       (ensime-assert-equal (sbt:get-previous-command) command)))
-   (ensime-test-cleanup proj))))
+				 "  it should \"throw NoSuchElementException if an empty stack is popped\" in {"
+				 "    val emptyStack = new Stack[Int]"
+				 "    a [NoSuchElementException] should be thrownBy {"
+				 "    emptyStack.pop()"
+				 "    }"
+				 "  }"
+				 "}"))
+		    (:name "build.sbt"
+			   :relative-to ""
+			   :contents ,(ensime-test-concat-lines
+				       (concat "scalaVersion := \"" ensime--test-scala-version "\"")
+				       ""
+				       (concat
+					"libraryDependencies += \"org.scalatest\" % \"scalatest_"
+					(ensime--test-scala-major-version) "\" % \"2.2.4\" % \"test\""))))))
+	   (src-files (plist-get proj :src-files)))
+      (assert ensime-sbt-command)
+      (ensime-test-init-proj proj))
 
-(ensime-async-test
- "Ensime integration test dwim."
- (let* ((proj (ensime-create-tmp-project
-	       `((:name
-		  "atest/ExampleSpec.scala"
-		  :relative-to "src/it/scala"
-		  :contents ,(ensime-test-concat-lines
-			      "package atest"
-			      "import collection.mutable.Stack"
-			      "import org.scalatest._"
-			      "class ExampleSpec extends FlatSpec with Matchers {"
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+      (dolist
+	  (tests '(("test" ensime-sbt-do-test-dwim)
+		   ("testQuick" ensime-sbt-do-test-quick-dwim)
+		   ("test-only atest.ExampleSpec" ensime-sbt-do-test-only-dwim)))
+	(let* ((module (-> (plist-get proj :config)
+			   (plist-get :subprojects)
+			   -first-item
+			   (plist-get :name)))
+	       (command (s-concat module "/" (car tests)))
+	       (f (cdr tests)))
+	  (apply f)
+	  (ensime-assert-equal (sbt:get-previous-command) command)))
+      (ensime-test-cleanup proj))))
 
-			      "  \"A Stack\" should \"pop values in last-in-first-out order\" in {"
-			      "    val stack = new Stack[Int]"
-			      "    stack.push(1)"
-			      "    stack.push(2)"
-			      "    stack.pop() should be (2)"
-			      "    stack.pop() should be (1)"
-			      "  }"
+   (ensime-async-test
+    "Ensime integration test dwim."
+    (let* ((proj (ensime-create-tmp-project
+		  `((:name
+		     "atest/ExampleSpec.scala"
+		     :relative-to "src/it/scala"
+		     :contents ,(ensime-test-concat-lines
+				 "package atest"
+				 "import collection.mutable.Stack"
+				 "import org.scalatest._"
+				 "class ExampleSpec extends FlatSpec with Matchers {"
 
-			      "  it should \"throw NoSuchElementException if an empty stack is popped\" in {"
-			      "    val emptyStack = new Stack[Int]"
-			      "    a [NoSuchElementException] should be thrownBy {"
-			      "    emptyStack.pop()"
-			      "    }"
-			      "  }"
-			      "}"))
-		 (:name "build.sbt"
-			:relative-to ""
-			:contents ,(ensime-test-concat-lines
-				    (concat "scalaVersion := \"" ensime--test-scala-version "\"")
-				    "lazy val root ="
-				    "  Project(\"root\", file(\".\"))"
-				    "  .configs( IntegrationTest )"
-				    "  .settings( Defaults.itSettings : _*)"
-				    "  .settings( libraryDependencies += specs )"
-				    (concat
-				     "lazy val specs = \"org.scalatest\" % \"scalatest_"
-				     (ensime--test-scala-major-version) "\" % \"2.2.4\" % \"it\""))))
-	       nil "root" '("src/it/scala")))
-	(src-files (plist-get proj :src-files)))
-   (assert ensime-sbt-command)
-   (ensime-test-init-proj proj))
+				 "  \"A Stack\" should \"pop values in last-in-first-out order\" in {"
+				 "    val stack = new Stack[Int]"
+				 "    stack.push(1)"
+				 "    stack.push(2)"
+				 "    stack.pop() should be (2)"
+				 "    stack.pop() should be (1)"
+				 "  }"
 
- ((:connected))
- ((:compiler-ready :full-typecheck-finished :indexer-ready)
-  (ensime-test-with-proj
-   (proj src-files)
-   (dolist
-       (tests '(("it:test" ensime-sbt-do-test-dwim)
-		("it:testQuick" ensime-sbt-do-test-quick-dwim)
-		("it:test-only atest.ExampleSpec" ensime-sbt-do-test-only-dwim)))
-     (let* ((module (-> (plist-get proj :config)
-			(plist-get :subprojects)
-			-first-item
-			(plist-get :name)))
-	    (command (s-concat module "/" (car tests)))
-	    (f (cdr tests)))
-       (apply f)
-       (ensime-assert-equal (sbt:get-previous-command) command)))
-   (ensime-test-cleanup proj))))))
+				 "  it should \"throw NoSuchElementException if an empty stack is popped\" in {"
+				 "    val emptyStack = new Stack[Int]"
+				 "    a [NoSuchElementException] should be thrownBy {"
+				 "    emptyStack.pop()"
+				 "    }"
+				 "  }"
+				 "}"))
+		    (:name "build.sbt"
+			   :relative-to ""
+			   :contents ,(ensime-test-concat-lines
+				       (concat "scalaVersion := \"" ensime--test-scala-version "\"")
+				       ""
+				       "lazy val root ="
+				       "  Project(\"root\", file(\".\"))"
+				       "  .configs( IntegrationTest )"
+				       "  .settings( Defaults.itSettings : _*)"
+				       "  .settings( libraryDependencies += specs )"
+				       ""
+				       (concat
+					"lazy val specs = \"org.scalatest\" % \"scalatest_"
+					(ensime--test-scala-major-version) "\" % \"2.2.4\" % \"it\""))))
+		  nil "root" '("src/it/scala")))
+	   (src-files (plist-get proj :src-files)))
+      (assert ensime-sbt-command)
+      (ensime-test-init-proj proj))
+
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+      (dolist
+	  (tests '(("it:test" ensime-sbt-do-test-dwim)
+		   ("it:testQuick" ensime-sbt-do-test-quick-dwim)
+		   ("it:test-only atest.ExampleSpec" ensime-sbt-do-test-only-dwim)))
+	(let* ((module (-> (plist-get proj :config)
+			   (plist-get :subprojects)
+			   -first-item
+			   (plist-get :name)))
+	       (command (s-concat module "/" (car tests)))
+	       (f (cdr tests)))
+	  (apply f)
+	  (ensime-assert-equal (sbt:get-previous-command) command)))
+      (ensime-test-cleanup proj))))))
 
 (defun ensime-run-all-tests ()
   "Run all regression tests for ensime-mode."
