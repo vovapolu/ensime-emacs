@@ -185,7 +185,7 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
          :classpath (ensime--build-classpath
                      (delete-dups (apply #'append
                                          (ensime--scan-classpath (ensime-read-from-file (ensime--classpath-file (plist-get config :scala-version)))
-                                                                 "\\(scala-compiler\\|scala-reflect\\)-[.[:digit:]]+\\.jar$")
+                                                                 "\\(scala-compiler\\|scala-reflect\\)\\(-[.[:digit:]]+\\)?\\.jar$")
                                          (funcall get-deps config)
                                          (mapcar get-deps (plist-get config :subprojects))))))
       (error "No ensime config available"))))
