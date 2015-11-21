@@ -414,7 +414,7 @@
 (defun ensime-typecheck-current-buffer ()
   "Re-typecheck the current buffer. If the buffer is dirty, it will be written
  to a temp file and that file will be checked."
-  (interactive "P")
+  (interactive)
   (setf (ensime-last-typecheck-run-time (ensime-connection)) (float-time))
   (if (buffer-modified-p)
       (save-restriction
