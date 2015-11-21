@@ -39,6 +39,9 @@ scalaVersion := \"_scala_version_\"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
+// sbt, STFU...
+ivyLoggingLevel := UpdateLogging.Quiet
+
 // we don't need jcenter, so this speeds up resolution
 fullResolvers -= Resolver.jcenterRepo
 
