@@ -41,8 +41,9 @@
               (setq start end)
               (setq end (1+ end)))
 	    (let ((ov (make-overlay start end buf)))
-              (when (or (eq type 'implicitParams)
-                        (eq type 'implicitConversion))
+	      (when (and ensime-implicit-gutter-icons
+			 (or (eq type 'implicitParams)
+			     (eq type 'implicitConversion)))
                 (overlay-put ov 'before-string
                              (propertize "."
                                          'display
