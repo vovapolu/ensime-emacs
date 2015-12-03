@@ -1854,6 +1854,63 @@
    ;;    (ensime-search-quit)
    ;;    (ensime-test-cleanup proj))))
 
+
+   (ensime-async-test
+    "Test misc operations on unsaved source file."
+    (let* ((proj (ensime-create-tmp-project '())))
+      (ensime-test-init-proj proj))
+
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+      (let ((path (expand-file-name "src/main/scala/test/Test.scala" (plist-get proj :root-dir))))
+	(ensime-test-var-put :path path)
+        (make-directory (file-name-directory path) t)
+        (find-file path)
+	(ensime-mode)
+        (ensime-assert-equal (ensime-owning-connection-for-source-file path)
+                             (ensime-owning-connection-for-rootdir
+			      (plist-get proj :root-dir)))
+        (insert (ensime-test-concat-lines
+                                 "package test"
+                                 "class A(value:String){"
+                                 "def hello(){"
+                                 "  print/*1*/"
+				 "  println(1)"
+                                 "}"
+                                 "}"))
+
+        (ensime-assert (= (length (ensime-all-notes)) 0))
+
+	;; Check that completions work without saving
+	(ensime-test-eat-label "1")
+	(let* ((candidates (ensime--test-completions)))
+	  (ensime-assert (member "println" candidates)))
+
+	;; generate compilation error
+	(insert "blablabla")
+
+	(ensime-typecheck-current-buffer)
+
+	;; Verify nothing we did caused the file to be written.
+	(ensime-assert (not (file-exists-p path)))
+
+	)))
+
+
+    ((:full-typecheck-finished)
+     (ensime-test-with-proj
+      (proj src-files)
+
+      (find-file (ensime-test-var-get :path))
+      (set-buffer-modified-p nil)
+      (kill-buffer nil)
+
+      (ensime-assert (> (length (ensime-all-notes)) 0))
+      (ensime-test-cleanup proj)))
+    )
+
    (ensime-async-test
     "Test add import."
     (let* ((proj (ensime-create-tmp-project
