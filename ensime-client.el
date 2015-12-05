@@ -962,7 +962,7 @@ copies. All other objects are used unchanged. List must not contain cycles."
 
 (defun ensime-rpc-async-typecheck-buffer (continue)
   (ensime-eval-async `(swank:typecheck-file
-		       ,(ensime-src-info-with-contents-in-temp)) continue))
+		       ,(ensime-src-info-for-current-buffer)) continue))
 
 (defun ensime-rpc-async-typecheck-all (continue)
   (ensime-eval-async `(swank:typecheck-all) continue))
