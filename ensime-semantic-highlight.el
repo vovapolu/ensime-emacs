@@ -118,10 +118,10 @@
 
 (defun ensime-sem-high-refresh-region (beg end)
   "Refresh semantic highlighting for the given region."
-  (when (and ensime-sem-high-enabled-p
-	     (file-exists-p buffer-file-name))
-    (ensime-rpc-symbol-designations
-     buffer-file-name (ensime-externalize-offset beg) (ensime-externalize-offset end)
+  (when (and ensime-sem-high-enabled-p)
+    (ensime-rpc-async-symbol-designations-for-buffer
+     (ensime-externalize-offset beg)
+     (ensime-externalize-offset end)
      (mapcar 'car ensime-sem-high-faces)
      `(lambda (info)
         (ensime-sem-high-clear-region ,beg ,end)
