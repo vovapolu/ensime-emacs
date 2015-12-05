@@ -195,6 +195,15 @@ Do not show 'Writing..' message."
     (insert-file-contents filename)
     (buffer-string)))
 
+(defun ensime-src-info-for-current-buffer ()
+  "Returns a source-file-info for the current state of the current buffer."
+  (if (or (buffer-modified-p) (null buffer-file-number))
+      (if (< (buffer-size) 1000) ;; TODO: find break-even point experimentally
+	  (ensime-src-info-with-contents)
+	(ensime-src-info-with-contents-in-temp))
+    `(:file ,buffer-file-name)
+    ))
+
 (defun ensime-src-info-with-contents-in-temp ()
   "Write the contents of current buffer to temp file, return a source-file-info
  with contents in temp file."
@@ -211,6 +220,10 @@ Do not show 'Writing..' message."
       (make-directory tmp-dir t))
     (ensime-write-buffer tmp-file nil nil)
     `(:file ,buffer-file-name :contents-in ,tmp-file)))
+
+(defun ensime-src-info-with-contents ()
+  "Returns a source-file-info with contents of current buffer as string."
+  `(:file ,buffer-file-name :contents ,(ensime-get-buffer-as-string)))
 
 (defun ensime--dependencies-newer-than-target-p (target-file dep-files-list)
   (if (file-exists-p target-file)

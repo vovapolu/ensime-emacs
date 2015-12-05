@@ -1083,9 +1083,16 @@ copies. All other objects are used unchanged. List must not contain cycles."
      result)))
 
 
-(defun ensime-rpc-symbol-designations (file start end requested-types continue)
+(defun ensime-rpc-async-symbol-designations (file start end requested-types continue)
   (ensime-eval-async `(swank:symbol-designations ,file ,start ,end ,requested-types)
 		     continue))
+
+(defun ensime-rpc-async-symbol-designations-for-buffer (start end requested-types continue)
+  (let ((file (cond ((version<= "0.8.18" (ensime-protocol-version))
+		     (ensime-src-info-for-current-buffer))
+		    (t buffer-file-name))))
+    (ensime-eval-async `(swank:symbol-designations ,file ,start ,end ,requested-types)
+		       continue)))
 
 (defun ensime-rpc-implicit-info-in-range (start end)
   (when (version<= "0.8.16" (ensime-protocol-version))
