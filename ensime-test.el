@@ -1876,38 +1876,46 @@
                                  "package test"
                                  "class A(value:String){"
                                  "def hello(){"
-                                 "  print/*1*/"
-				 "  println(1)"
+				 "  println/*1*/(1)"
+				 "  /*2*/"
                                  "}"
                                  "}"))
 
         (ensime-assert (= (length (ensime-all-notes)) 0))
 
-	;; Check that completions work without saving
-	(ensime-test-eat-label "1")
-	(let* ((candidates (ensime--test-completions)))
-	  (ensime-assert (member "println" candidates)))
-
 	;; generate compilation error
-	(insert "blablabla")
-
-	(ensime-typecheck-current-buffer)
+	(goto-char (ensime-test-before-label "2"))
+	(insert "prin")
 
 	;; Verify nothing we did caused the file to be written.
 	(ensime-assert (not (file-exists-p path)))
-
 	)))
 
 
-    ((:full-typecheck-finished)
+    ((:full-typecheck-finished :region-sem-highlighted)
      (ensime-test-with-proj
       (proj src-files)
-
       (find-file (ensime-test-var-get :path))
+
+      ;; Verify nothing we did caused the file to be written.
+      (ensime-assert (not (file-exists-p path)))
+
+      ;; Auto typecheck should catch unrecognized symbol
+      (ensime-assert (> (length (ensime-all-notes)) 0))
+
+      ;; Auto semantic highlighting should have kicked in
+      (goto-char (ensime-test-before-label "1"))
+      (ensime-assert (memq 'functionCall (ensime-sem-high-sym-types-at-point)))
+
+      ;; Completion should work
+      (goto-char (ensime-test-before-label "2"))
+      (let* ((candidates (ensime--test-completions)))
+	(ensime-assert (member "println" candidates)))
+
+      ;; Extra steps to kill unsaved file without complaint.
       (set-buffer-modified-p nil)
       (kill-buffer nil)
 
-      (ensime-assert (> (length (ensime-all-notes)) 0))
       (ensime-test-cleanup proj)))
     )
 

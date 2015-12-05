@@ -176,7 +176,9 @@ Do not show 'Writing..' message."
         (write-region-post-annotation-function nil))
     (when clear-modtime
       (clear-visited-file-modtime))
-    (write-region (point-min) (point-max) file nil 'nomessage)
+    (save-restriction
+      (widen)
+      (write-region (point-min) (point-max) file nil 'nomessage))
     (when set-unmodified
       (set-buffer-modified-p nil))
     ))

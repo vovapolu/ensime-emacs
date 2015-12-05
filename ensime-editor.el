@@ -412,16 +412,10 @@
 ;; Compilation on request
 
 (defun ensime-typecheck-current-buffer ()
-  "Re-typecheck the current buffer. If the buffer is dirty, it will be written
- to a temp file and that file will be checked."
+  "Re-typecheck the current buffer and updates the last-typecheck time.."
   (interactive)
   (setf (ensime-last-typecheck-run-time (ensime-connection)) (float-time))
-  (if (buffer-modified-p)
-      (save-restriction
-        (widen)
-        (ensime-rpc-async-typecheck-buffer 'identity))
-    (progn
-      (ensime-rpc-async-typecheck-file buffer-file-name 'identity))))
+  (ensime-rpc-async-typecheck-buffer 'identity))
 
 (defun ensime-save-and-typecheck-current-buffer ()
   "A compatibility shim. Writes the buffer and then invokes ensime-typecheck-current-buffer."
