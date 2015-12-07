@@ -1868,55 +1868,67 @@
 	(ensime-test-var-put :path path)
         (make-directory (file-name-directory path) t)
         (find-file path)
-	(ensime-mode)
-        (ensime-assert-equal (ensime-owning-connection-for-source-file path)
-                             (ensime-owning-connection-for-rootdir
-			      (plist-get proj :root-dir)))
         (insert (ensime-test-concat-lines
                                  "package test"
                                  "class A(value:String){"
                                  "def hello(){"
-				 "  println/*1*/(1)"
-				 "  /*2*/"
+                                 "  println/*1*/(1)"
+                                 "  /*2*/"
                                  "}"
                                  "}"))
+	(ensime-mode)
+        (ensime-assert-equal (ensime-owning-connection-for-source-file path)
+                             (ensime-owning-connection-for-rootdir
+                              (plist-get proj :root-dir)))
 
         (ensime-assert (= (length (ensime-all-notes)) 0))
-
-	;; generate compilation error
-	(goto-char (ensime-test-before-label "2"))
-	(insert "prin")
 
 	;; Verify nothing we did caused the file to be written.
 	(ensime-assert (not (file-exists-p path)))
 	)))
 
+    ((:full-typecheck-finished :region-sem-highlighted)
+     (ensime-test-with-proj
+      (proj src-files)
+      (let ((path (ensime-test-var-get :path)))
+	(find-file path)
+        (ensime-assert (= (length (ensime-all-notes)) 0))
+	(goto-char (ensime-test-before-label "2"))
+        (insert "prin")
+
+        (ensime-typecheck-current-buffer)
+        (ensime-sem-high-refresh-buffer)
+
+	;; Verify nothing we did caused the file to be written.
+	(ensime-assert (not (file-exists-p path)))
+        )))
 
     ((:full-typecheck-finished :region-sem-highlighted)
      (ensime-test-with-proj
       (proj src-files)
-      (find-file (ensime-test-var-get :path))
+      (let ((path (ensime-test-var-get :path)))
+	(find-file path)
 
-      ;; Verify nothing we did caused the file to be written.
-      (ensime-assert (not (file-exists-p path)))
+	;; Auto typecheck should catch unrecognized symbol
+	(ensime-assert (> (length (ensime-all-notes)) 0))
 
-      ;; Auto typecheck should catch unrecognized symbol
-      (ensime-assert (> (length (ensime-all-notes)) 0))
+	;; Auto semantic highlighting should have kicked in
+	(goto-char (ensime-test-before-label "1"))
+	(ensime-assert (memq 'functionCall (ensime-sem-high-sym-types-at-point)))
 
-      ;; Auto semantic highlighting should have kicked in
-      (goto-char (ensime-test-before-label "1"))
-      (ensime-assert (memq 'functionCall (ensime-sem-high-sym-types-at-point)))
+	;; Completion should work
+	(goto-char (ensime-test-before-label "2"))
+	(let* ((candidates (ensime--test-completions)))
+          (ensime-assert (member "println" candidates)))
 
-      ;; Completion should work
-      (goto-char (ensime-test-before-label "2"))
-      (let* ((candidates (ensime--test-completions)))
-	(ensime-assert (member "println" candidates)))
+	;; Verify nothing we did caused the file to be written.
+	(ensime-assert (not (file-exists-p path)))
 
-      ;; Extra steps to kill unsaved file without complaint.
-      (set-buffer-modified-p nil)
-      (kill-buffer nil)
+	;; Extra steps to kill unsaved file without complaint.
+	(set-buffer-modified-p nil)
+	(kill-buffer nil)
 
-      (ensime-test-cleanup proj)))
+	(ensime-test-cleanup proj))))
     )
 
    (ensime-async-test
