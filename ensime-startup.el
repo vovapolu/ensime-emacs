@@ -276,6 +276,11 @@ CACHE-DIR is the server's persistent output directory."
 
       (set (make-local-variable 'comint-process-echoes) nil)
       (set (make-local-variable 'comint-use-prompt-regexp) nil)
+
+      ;; Get rid of default filters including ansi coloring, scroll to bottom,
+      ;; and scanning for password prompt. These use non-trivial cpu.
+      (set (make-local-variable 'comint-output-filter-functions) nil)
+
       (when ensime--debug-messages
         (make-local-variable 'comint-output-filter-functions)
         (push #'(lambda (str) (message "%s" str)) comint-output-filter-functions))
