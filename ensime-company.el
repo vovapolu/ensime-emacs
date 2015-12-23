@@ -136,9 +136,9 @@
 	 (is-callable (get-text-property 0 'is-callable candidate))
 	 (to-insert (get-text-property 0 'to-insert candidate))
 	 (name-start-point (- (point) (length name)))
+	 (is-scala (ensime-scala-file-p buffer-file-name))
 	 (call-info
-	  (when is-callable (ensime-call-completion-info
-			     candidate (ensime-scala-file-p buffer-file-name))))
+	  (when is-callable (ensime-call-completion-info candidate is-scala)))
 	 (param-sections
 	  (when is-callable
 	    (-filter
@@ -151,7 +151,16 @@
 	       (= 1 (length (plist-get
 			     (car param-sections) :params)))
 	       (null (string-match "[A-z]" name))))
-	 (is-field-assigner (s-ends-with? "_=" name)))
+	 (is-field-assigner (s-ends-with? "_=" name))
+	 (skip-params
+	  (and is-scala
+	       (or
+		;; Scala nullary methods will have 0 param-sections
+		(null param-sections)
+		;; Also make an exception for zero-arg getters.
+		(and
+		 (null (plist-get (car param-sections) :params))
+		 (s-starts-with-p "get" candidate))))))
 
     (when is-field-assigner
       (delete-char (- 2))
@@ -169,23 +178,22 @@
       (delete-char (- (length name)))
       (insert to-insert))
 
-    (when is-callable
-	(when (and call-info param-sections)
-	  (let* ((maybe-braces (ensime-param-section-accepts-block-p
-				(car (last param-sections))))
-		 (pass-function-block
-		  (and maybe-braces
-		       (eq
-			(or force-block
-			    (read-char-choice
-			     "Choose '{' or '(' " '( ?\{ ?\( ))) ?\{)))
-		 (snippet
-		  (ensime--build-yasnippet-for-call
-		   param-sections
-		   (or is-operator is-field-assigner)
-		   pass-function-block)))
-	      (yas-expand-snippet snippet (point) (point))
-	    )))))
+    (when (and is-callable call-info (not skip-params))
+      (let* ((maybe-braces (ensime-param-section-accepts-block-p
+			    (car (last param-sections))))
+	     (pass-function-block
+	      (and maybe-braces
+		   (eq
+		    (or force-block
+			(read-char-choice
+			 "Choose '{' or '(' " '( ?\{ ?\( ))) ?\{)))
+	     (snippet
+	      (ensime--build-yasnippet-for-call
+	       param-sections
+	       (or is-operator is-field-assigner)
+	       pass-function-block)))
+	(yas-expand-snippet snippet (point) (point))
+	))))
 
 (defun ensime-company (command &optional arg &rest _args)
   "Ensime backend for company-mode."
