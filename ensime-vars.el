@@ -237,6 +237,48 @@ and parameters."
   :type 'boolean
   :group 'ensime-ui)
 
+(defcustom ensime-refactor-enable-beta nil
+  "If non-nil, Ensime will use diff api for refactoring."
+  :type 'boolean
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-preview nil
+  "If non-nil, Ensime will show preview of the changes in the
+*ENSIME-Refactoring* buffer."
+  :type 'boolean
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-auto-apply-file-limit 0
+  "If less or equal to the number of diff source files, Ensime
+will automatically apply hunks. It is used in conjunction with
+`ensime-refactor-auto-apply-hunk-limit' and
+`ensime-refactor-auto-apply-file-limit'."
+  :type 'number
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-auto-apply-hunk-limit 0
+  "If less or equal to the number of hunks, Ensime will
+automatically apply hunks. It is used in conjunction with
+`ensime-refactor-auto-apply-file-limit' and
+`ensime-refactor-auto-apply-types'."
+  :type 'number
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-auto-apply-types
+  '(organizeImports)
+  "Automatically apply hunks if the refactor type's in the
+list. It is used in conjunction with
+`ensime-refactor-auto-apply-file-limit' and
+`ensime-refactor-auto-apply-hunk-limit'."
+  :type '(repeat symbol)
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-save-with-no-questions t
+  "Save buffers affected by refactoring with no confirmation
+questions."
+  :type 'boolean
+  :group 'ensime-ui)
+
 (provide 'ensime-vars)
 
 ;; Local Variables:
