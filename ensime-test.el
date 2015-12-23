@@ -1321,6 +1321,7 @@
 				 "    val h = doByNa/*6*/"
 				 "    this.fie/*7*/"
 				 "    \"kjsdf\".hashCo/*8*/"
+				 "    \"kjsdf\".getByt/*8_1*/"
 				 "    5.toLo/*9*/"
                                  "  }"
                                  "}")))))
@@ -1445,6 +1446,20 @@
 	(ensime--yasnippet-complete-action (car (member "hashCode" candidates)))
 	(ensime-assert-equal
 	 (buffer-substring-no-properties pt (point)) "de()"))
+      (ensime-save-and-typecheck-current-buffer)))
+
+    ((:full-typecheck-finished)
+     (ensime-test-with-proj
+      (proj src-files)
+      ;; Expand an empty argument list for java getter method.
+      (ensime-test-eat-label "8_1")
+      (let* ((candidates (ensime--test-completions))
+	     (pt (point)))
+        (ensime-assert (member "getBytes" candidates))
+	(insert "es")
+	(ensime--yasnippet-complete-action (car (member "getBytes" candidates)))
+	(ensime-assert-equal
+	 (buffer-substring-no-properties pt (point)) "es"))
       (ensime-save-and-typecheck-current-buffer)))
 
     ((:full-typecheck-finished)
