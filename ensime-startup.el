@@ -188,7 +188,7 @@ Analyzer will be restarted."
 If such a file is present, it will override the `ensime--classpath-file' and
 `ensime-update' will not be automatically called."
   (expand-file-name
-   (format "ensime_%s-%s-assembly.jar" scala-version ensime-server-version)
+   (format "ensime_%s-%s-assembly.jar" (ensime--scala-binary-version scala-version) ensime-server-version)
    (ensime--user-directory)))
 
 (defun ensime--classpath-file (scala-version)
@@ -259,11 +259,13 @@ CACHE-DIR is the server's persistent output directory."
            (tools-jar (concat java-home "lib/tools.jar"))
            (assembly-file (ensime--assembly-file scala-version))
            (classpath-file (ensime--classpath-file scala-version))
-           (classpath (concat tools-jar
-                              ensime--classpath-separator
-                              (if (file-exists-p assembly-file)
-                                  assembly-file
-                                (ensime-read-from-file classpath-file))))
+           (scala-compiler-jars (plist-get config :scala-compiler-jars))
+           (server-classpath (if (file-exists-p assembly-file)
+                                 (s-join ensime--classpath-separator
+                                         (cons assembly-file scala-compiler-jars))
+                               (ensime-read-from-file classpath-file)))
+           (classpath (s-join ensime--classpath-separator
+                              (list tools-jar server-classpath)))
            (process-environment (append user-env process-environment))
            (java-command (concat java-home "bin/java"))
            (args (-flatten (list
@@ -305,6 +307,13 @@ CACHE-DIR is the server's persistent output directory."
   (condition-case err
       (ensime-interrupt-all-servers)
     (message "Error while killing emacs: %s" err)))
+
+(defun ensime--scala-binary-version (full-version)
+  "The scala binary version given a full version string."
+  (pcase (version-to-list full-version)
+    (`(2 10 ,_) "2.10")
+    (`(2 11 ,_) "2.11")
+    (t (error "unsupported scala version %s" full-version))))
 
 (defun ensime--create-sbt-start-script (scala-version)
   ;; emacs has some weird case-preservation rules in regexp replace
