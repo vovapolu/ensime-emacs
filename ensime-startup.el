@@ -39,17 +39,14 @@ scalaVersion := \"_scala_version_\"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
-// sbt, STFU...
-ivyLoggingLevel := UpdateLogging.Quiet
-
-// we don't need jcenter, so this speeds up resolution
-fullResolvers -= Resolver.jcenterRepo
-
 // allows local builds of scala
 resolvers += Resolver.mavenLocal
 
-// for java support
-resolvers += \"NetBeans\" at \"http://bits.netbeans.org/nexus/content/groups/netbeans\"
+// WORKAROUND https://github.com/ensime/ensime-emacs/issues/327
+// resolvers += \"NetBeans\" at \"http://bits.netbeans.org/nexus/content/groups/netbeans\"
+
+// we need jcenter for Netbeans jars
+fullResolvers += Resolver.jcenterRepo
 
 // this is where the ensime-server snapshots are hosted
 resolvers += Resolver.sonatypeRepo(\"snapshots\")
