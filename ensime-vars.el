@@ -243,39 +243,67 @@ and parameters."
   :group 'ensime-ui)
 
 (defcustom ensime-refactor-preview nil
-  "If non-nil, Ensime will show preview of the changes in the
-*ENSIME-Refactoring* buffer."
+  "Enable or disable a refactor preview feature.
+Non-nil means Ensime will show a preview of the changes in the
+*ENSIME-Refactoring* buffer. Diff hunks can be applied manually
+using standard `diff-mode' commands.  Some changes can still be
+applied automatically if they satisfy the criteria in
+`ensime-refactor-preview-override-hunk',
+`ensime-refactor-preview-override-file' or
+`ensime-refactor-preview-override-types'.
+Nil means Ensime will apply changes automatically unless overridden
+by `ensime-refactor-no-preview-override-hunk',
+`ensime-refactor-no-preview-ovverride-file' or
+`ensime-refactor-no-preview-override-types'"
   :type 'boolean
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-auto-apply-file-limit 0
-  "If less or equal to the number of diff source files, Ensime
-will automatically apply hunks. It is used in conjunction with
-`ensime-refactor-auto-apply-hunk-limit' and
-`ensime-refactor-auto-apply-file-limit'."
+(defcustom ensime-refactor-preview-override-file 0
+  "The overriding criterion for a non-nil `ensime-refactor-preview'.
+Automatically apply hunks when the number of affected files is
+less of equal to the value."
   :type 'number
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-auto-apply-hunk-limit 0
-  "If less or equal to the number of hunks, Ensime will
-automatically apply hunks. It is used in conjunction with
-`ensime-refactor-auto-apply-file-limit' and
-`ensime-refactor-auto-apply-types'."
+(defcustom ensime-refactor-preview-override-hunk 0
+  "The overriding criterion for a non-nil `ensime-refactor-preview'.
+Automatically apply hunks when the number of hunks is less of
+equal to the value."
   :type 'number
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-auto-apply-types
-  '(organizeImports)
-  "Automatically apply hunks if the refactor type's in the
-list. It is used in conjunction with
-`ensime-refactor-auto-apply-file-limit' and
-`ensime-refactor-auto-apply-hunk-limit'."
+(defcustom ensime-refactor-preview-override-types  '()
+  "The overriding criterion for a non-nil `ensime-refactor-preview'.
+Automatically apply hunks when the refactor type is in the list.
+Possible types: `organizeImport', `rename', `extractLocal',
+`extractMethod' or `inlineLocal'."
+  :type '(repeat symbol)
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-no-preview-override-file 0
+  "The overriding criterion for a nil `ensime-refactor-preview'.
+Show the preview when the number of affected files is greater or
+equal to the value"
+  :type 'number
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-no-preview-override-hunk 0
+  "The overriding criterion for a nil `ensime-refactor-preview'.
+Show the preview when the number of hunks is greater or equal to
+the value."
+  :type 'number
+  :group 'ensime-ui)
+
+(defcustom ensime-refactor-no-preview-override-types  '()
+  "The overriding criterion for a nil `ensime-refactor-preview'.
+Show the preview when the refactor type is in the list.
+Possible types: `organizeImport', `rename', `extractLocal',
+`extractMethod' or `inlineLocal'."
   :type '(repeat symbol)
   :group 'ensime-ui)
 
 (defcustom ensime-refactor-save-with-no-questions t
-  "Save buffers affected by refactoring with no confirmation
-questions."
+  "Save buffers affected by refactoring with no confirmation questions."
   :type 'boolean
   :group 'ensime-ui)
 
