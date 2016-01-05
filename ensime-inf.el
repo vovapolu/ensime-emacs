@@ -177,18 +177,23 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
                           (append (plist-get c :test-targets)
                                   (plist-get c :compile-deps)
                                   (plist-get c :runtime-deps)
-                                  (plist-get c :test-deps))))))
+                                  (plist-get c :test-deps)))))
+        (get-repl-jars (lambda (config)
+                         (-filter (lambda (p)
+                                    (string-match "\\(scala-compiler\\|scala-reflect\\)\\(-[.[:digit:]]+\\)?\\.jar$" p))
+                                  (if (plist-member config :scala-compiler-jars)
+                                      (plist-get config :scala-compiler-jars)
+                                    (split-string
+                                     (ensime-read-from-file
+                                      (ensime--classpath-file (plist-get config :scala-version)))
+                                     ensime--classpath-separator t))))))
     (if config
         (list
          :java (concat (plist-get config :java-home) "/bin/java")
          :java-flags (or (plist-get config :java-flags) ensime-default-java-flags)
          :classpath (ensime--build-classpath
                      (delete-dups (apply #'append
-                                         (ensime--scan-classpath
-                                          (if (plist-member config :scala-compiler-jars)
-                                              (plist-get config :scala-compiler-jars)
-                                            (ensime-read-from-file (ensime--classpath-file (plist-get config :scala-version))))
-                                          "\\(scala-compiler\\|scala-reflect\\)\\(-[.[:digit:]]+\\)?\\.jar$")
+                                         (funcall get-repl-jars config)
                                          (funcall get-deps config)
                                          (mapcar get-deps (plist-get config :subprojects))))))
       (error "No ensime config available"))))

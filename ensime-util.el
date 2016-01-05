@@ -247,11 +247,6 @@ Do not show 'Writing..' message."
   "Build a classpath string from a list of paths"
   (mapconcat #'identity paths ensime--classpath-separator))
 
-(defun ensime--scan-classpath (classpath pattern)
-  "Search through a classpath and extract paths that match the regexp specified"
-  (delq nil (mapcar (lambda (p) (and (string-match pattern p) p))
-                    (split-string classpath ensime--classpath-separator))))
-
 ;; Commonly used functions
 
 (defun ensime-curry (fun &rest args)

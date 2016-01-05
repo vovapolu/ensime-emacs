@@ -967,13 +967,6 @@
                          '("str1" "foo" "str2" "str3" "a" "b" "c" "bar")))
 
    (ensime-test
-    "Test ensime--scan-classpath"
-    (ensime-assert-equal (ensime--scan-classpath
-                          (ensime--build-classpath '("/x/y/foo-1.2.jar" "/x/y/bar-3.4.jar" "/x/y/baz-2.3.jar"))
-                          "\\(foo\\|baz\\)-[.[:digit:]]+\\.jar$")
-                         '("/x/y/foo-1.2.jar" "/x/y/baz-2.3.jar")))
-
-   (ensime-test
     "Test ensime-inf-repl-config"
     (let ((test-config
            '(:scala-version "test-inf-repl-config"
