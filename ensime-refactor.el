@@ -291,13 +291,19 @@
   (let ((refactor-type (plist-get result :refactor-type))
         (id (plist-get result :procedure-id))
         (diff (plist-get result :diff)))
-    (pcase (list ensime-refactor-preview
-                 (ensime--refactor-diff-auto-apply-type-p refactor-type)
-                 (ensime--refactor-diff-auto-apply-file-p diff)
-                 (ensime--refactor-diff-auto-apply-hunk-p diff))
-      (`(nil ,_ ,_ ,_)       (ensime-refactor-diff-apply-silently diff))
-      (`(,_ nil nil nil)   (ensime-refactor-diff-preview-popup diff))
-      (_                  (ensime-refactor-diff-preview-apply-popup diff)))
+    (if ensime-refactor-preview
+        (pcase (list
+                (ensime--refactor-diff-preview-override-types-p refactor-type)
+                (ensime--refactor-diff-preview-override-file-p diff)
+                (ensime--refactor-diff-preview-override-hunk-p diff))
+          (`(nil nil nil)   (ensime-refactor-diff-preview-popup diff))
+          (_                (ensime-refactor-diff-apply-silently diff)))
+      (pcase (list
+              (ensime--refactor-diff-no-preview-override-types-p refactor-type)
+              (ensime--refactor-diff-no-preview-override-file-p diff)
+              (ensime--refactor-diff-no-preview-override-hunk-p diff))
+        (`(nil nil nil)   (ensime-refactor-diff-apply-silently diff))
+        (_                (ensime-refactor-diff-preview-popup diff))))
     (delete-file diff)
     (ensime-event-sig :refactor-diff-done diff)))
 
@@ -319,22 +325,40 @@
     (ensime-refactor-diff-apply-hunks)
     (ensime-refactor-diff-save-source-files)))
 
-(defun ensime--refactor-diff-auto-apply-type-p (refactor-type)
-  (memq refactor-type ensime-refactor-auto-apply-types))
+(defun ensime--refactor-diff-preview-override-types-p (refactor-type)
+  (memq refactor-type ensime-refactor-preview-override-types))
 
-(defun ensime--refactor-diff-auto-apply-file-p (diff)
+(defun ensime--refactor-diff-preview-override-file-p (diff)
   (with-temp-buffer
     (insert-file-contents diff)
     (goto-char (point-min))
-    (re-search-forward diff-file-header-re nil t
-                       ensime-refactor-auto-apply-file-limit)))
+    (not (re-search-forward diff-file-header-re nil t
+                            (+ 1 ensime-refactor-preview-override-file)))))
 
-(defun ensime--refactor-diff-auto-apply-hunk-p (diff)
+(defun ensime--refactor-diff-preview-override-hunk-p (diff)
   (with-temp-buffer
     (insert-file-contents diff)
     (goto-char (point-min))
-    (re-search-forward diff-hunk-header-re nil t
-                       ensime-refactor-auto-apply-hunk-limit)))
+    (not (re-search-forward diff-hunk-header-re nil t
+                            (+ 1 ensime-refactor-preview-override-hunk)))))
+
+(defun ensime--refactor-diff-no-preview-override-types-p (refactor-type)
+  (memq refactor-type ensime-refactor-no-preview-override-types))
+
+(defun ensime--refactor-diff-no-preview-override-file-p (diff)
+  (with-temp-buffer
+    (insert-file-contents diff)
+    (goto-char (point-min))
+    (not (re-search-forward diff-file-header-re nil t
+                            (+ 1 ensime-refactor-no-preview-override-file)))))
+
+(defun ensime--refactor-diff-no-preview-override-hunk-p (diff)
+  (with-temp-buffer
+    (insert-file-contents diff)
+    (goto-char (point-min))
+    (not (re-search-forward diff-hunk-header-re nil t
+                            (+ 1 ensime-refactor-no-preview-override-hunk)))))
+
 
 (defun ensime-refactor-diff-apply-hunks ()
   "Apply or undo all hunks in the diff contents of the current buffer."

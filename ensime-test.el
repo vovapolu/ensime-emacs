@@ -1564,9 +1564,6 @@
     ((:compiler-ready :full-typecheck-finished)
      (ensime-test-with-proj
       (proj src-files)
-      (setq ensime-refactor-auto-apply-types '(rename))
-      (setq ensime-refactor-auto-apply-file-limit 0)
-      (setq ensime-refactor-auto-apply-hunk-limit 0)
       (ensime-refactor-diff-organize-imports)))
     (:refactor-diff-done diff t
                             (ensime-test-with-proj
@@ -1678,9 +1675,6 @@
      (ensime-test-with-proj
       (proj src-files)
       (ensime-assert (null (ensime-all-notes))))
-     (setq ensime-refactor-auto-apply-types '(rename))
-     (setq ensime-refactor-auto-apply-file-limit 0)
-     (setq ensime-refactor-auto-apply-hunk-limit 0)
      (goto-char (ensime-test-after-label "1"))
      (forward-char)
      (ensime-refactor-diff-rename "DudeFace"))
