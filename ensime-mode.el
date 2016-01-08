@@ -291,7 +291,8 @@
           (setq tooltip-delay 1.0)
           (define-key ensime-mode-map [mouse-movement] 'ensime-mouse-motion))
 
-        (ensime-refresh-all-note-overlays))
+        (ensime-refresh-all-note-overlays)
+        (ensime--setup-imenu))
     (progn
       (pcase ensime-completion-style
         (`auto-complete
@@ -319,7 +320,8 @@
 
       (remove-hook 'tooltip-functions 'ensime-tooltip-handler)
       (make-local-variable 'track-mouse)
-      (setq track-mouse nil))))
+      (setq track-mouse nil)
+      (ensime--unset-imenu))))
 
 ;;;;;; Mouse handlers
 
@@ -348,6 +350,17 @@
     (setq tooltip-last-mouse-motion-event (copy-sequence event))
     (tooltip-start-delayed-tip)))
 
+(defun ensime--setup-imenu ()
+  "Setup imenu function and make imenu rescan index with every call."
+  (set (make-local-variable 'backup-imenu-auto-rescan) imenu-auto-rescan)
+  (set (make-local-variable 'backup-imenu-create-index-function) imenu-create-index-function)
+  (set (make-local-variable 'imenu-auto-rescan) t)
+  (set (make-local-variable 'imenu-create-index-function) #'ensime-imenu-index-function))
+
+(defun ensime--unset-imenu ()
+  "Revert ensime specific imenu settings."
+  (setq imenu-auto-rescan backup-imenu-auto-rescan)
+  (setq imenu-create-index-function backup-imenu-create-index-function))
 
 ;;;;;; Tooltips
 

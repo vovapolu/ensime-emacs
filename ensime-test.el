@@ -2196,6 +2196,44 @@
 
       (ensime-test-cleanup proj))))
 
+
+   (ensime-async-test
+    "Test ensime imenu index function."
+    (let* ((proj (ensime-create-tmp-project
+                  `((:name
+                     "pack/a.scala"
+                     :contents ,(ensime-test-concat-lines
+                                 "package pack"
+                                 "import java.io.File"
+                                 "class Test(val accessor: File)"
+                                 "case class CaseTest(x: String, y: Int)"
+                                 "object Test {"
+                                 "  type TestType[A] = List[A]"
+                                 "  class Nested(val accessor: String)"
+                                 "  case class NestedCase(x: String, y:Int)"
+                                 "  implicit def stringToNested(s: String) = new Nested(s)"
+                                 "}"))))))
+      (ensime-test-init-proj proj))
+
+    ((:connected))
+    ((:compiler-ready :indexer-ready :full-typecheck-finished)
+
+     (ensime-test-with-proj
+      (proj src-files)
+      (find-file (car src-files))
+      (goto-char (point-min))
+      (let ((expected '(("class:Test" . 40)
+                        ("class:CaseTest" . 76)
+                        ("object:Test" . 111)
+                        ("type:Test.TestType" . 125)
+                        ("class:Test.Nested" . 155)
+                        ("class:Test.NestedCase" . 197)
+                        ("def:Test.stringToNested" . 241)))
+	    (imenu-index (ensime-imenu-index-function)))
+	(ensime-assert (not (null imenu-index)))
+	(ensime-assert-equal imenu-index expected))
+      (ensime-test-cleanup proj))))
+
    (ensime-async-test
     "Test implicit notes."
     (let* ((proj (ensime-create-tmp-project
