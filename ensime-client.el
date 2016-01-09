@@ -1135,6 +1135,10 @@ copies. All other objects are used unchanged. List must not contain cycles."
      t ;; reload
      ) continue))
 
+(defun ensime-rpc-structure-view ()
+  (ensime-eval
+   `(swank:structure-view
+     ,(ensime-src-info-for-current-buffer))))
 
 (provide 'ensime-client)
 
