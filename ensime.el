@@ -79,27 +79,29 @@
   "Read config file for settings. Then start an inferior
    ENSIME server and connect to its Swank server."
   (interactive)
-  (condition-case ex
-      (if ensime-auto-generate-config
-          (ensime--maybe-refresh-config
-           nil
-           'ensime--maybe-update-and-start-noninteractive
-           '(lambda (reason) (ensime--maybe-update-and-start-noninteractive)))
-        (ensime--maybe-update-and-start))
-    ('error (error (format
-                    "check that sbt is on your PATH and that your config is compatible with %s [%s]"
-                    "http://github.com/ensime/ensime-server/wiki/Example-Configuration-File" ex)))))
+  (let ((orig-buffer-file-name buffer-file-name))
+    (condition-case ex
+        (if ensime-auto-generate-config
+            (ensime--maybe-refresh-config
+             nil
+             '(ensime--maybe-update-and-start-noninteractive orig-buffer-file-name)
+             '(lambda (reason) (ensime--maybe-update-and-start-noninteractive orig-buffer-file-name)))
+          (ensime--maybe-update-and-start orig-buffer-file-name))
+      ('error (error (format
+                      "check that sbt is on your PATH and that your config is compatible with %s [%s]"
+                      "http://github.com/ensime/ensime-server/wiki/Example-Configuration-File" ex))))))
 
 ;;;###autoload
 (defun ensime-remote (host port)
   "Read config file for settings. Then connect to an existing ENSIME server."
   (interactive "shost: \nnport: ")
 
-  (if ensime-auto-generate-config
-      (ensime--maybe-refresh-config
-       nil
-       `(lambda () (ensime--maybe-update-and-start (url-gateway-nslookup-host ,host) ,port))
-       `(lambda (reason) (ensime--maybe-update-and-start (url-gateway-nslookup-host ,host) ,port)))))
+  (let ((orig-buffer-file-name buffer-file-name))
+    (if ensime-auto-generate-config
+        (ensime--maybe-refresh-config
+         nil
+         `(lambda () (ensime--maybe-update-and-start orig-buffer-file-name (url-gateway-nslookup-host ,host) ,port))
+         `(lambda (reason) (ensime--maybe-update-and-start orig-buffer-file-name (url-gateway-nslookup-host ,host) ,port))))))
 
 (provide 'ensime)
 

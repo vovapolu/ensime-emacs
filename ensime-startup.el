@@ -78,15 +78,15 @@ saveClasspathTask := {
            (scala-version (plist-get config :scala-version)))
       (ensime--update-server scala-version `(lambda () (message "ENSIME server updated.")))))
 
-(defun ensime--maybe-update-and-start (&optional host port)
+(defun ensime--maybe-update-and-start (orig-buffer-file-name &optional host port)
   (if (and host port)
       ;; When both host and port are provided, we assume we're connecting to
       ;; an existing, listening server.
-      (let* ((config-file (ensime-config-find))
+      (let* ((config-file (ensime-config-find orig-buffer-file-name))
 	     (config (ensime-config-load config-file))
 	     (cache-dir (file-name-as-directory (ensime--get-cache-dir config))))
 	(ensime--retry-connect nil host (lambda () port) config cache-dir))
-    (let* ((config-file (ensime-config-find))
+    (let* ((config-file (ensime-config-find orig-buffer-file-name))
            (config (ensime-config-load config-file))
            (scala-version (plist-get config :scala-version))
            (assembly-file (ensime--assembly-file scala-version))
@@ -96,9 +96,9 @@ saveClasspathTask := {
           (ensime--update-server scala-version `(lambda () (ensime--1 ,config-file)))
         (ensime--1 config-file)))))
 
-(defun ensime--maybe-update-and-start-noninteractive ()
+(defun ensime--maybe-update-and-start-noninteractive (orig-buffer-file-name)
   (let ((ensime-prefer-noninteractive t))
-    (ensime--maybe-update-and-start)))
+    (ensime--maybe-update-and-start orig-buffer-file-name)))
 
 (defun* ensime--1 (config-file)
   (when (and (ensime-source-file-p) (not ensime-mode))
