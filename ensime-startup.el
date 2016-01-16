@@ -70,7 +70,7 @@ saveClasspathTask := {
 }
 ")
 
-(defun ensime-update ()
+(defun ensime-server-update ()
   "Install the most recent version of ENSIME server."
   (interactive)
     (let* ((config-file (ensime-config-find))
@@ -183,7 +183,7 @@ Analyzer will be restarted."
 (defun ensime--assembly-file (scala-version)
   "The expected location of a manually produced assembly file.
 If such a file is present, it will override the `ensime--classpath-file' and
-`ensime-update' will not be automatically called."
+the ensime server will not be automatically updated."
   (expand-file-name
    (format "ensime_%s-%s-assembly.jar" (ensime--scala-binary-version scala-version) ensime-server-version)
    (ensime--user-directory)))
