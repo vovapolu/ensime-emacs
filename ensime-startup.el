@@ -70,7 +70,7 @@ saveClasspathTask := {
 }
 ")
 
-(defun ensime-update ()
+(defun ensime-server-update ()
   "Install the most recent version of ENSIME server."
   (interactive)
     (let* ((config-file (ensime-config-find))
@@ -78,15 +78,15 @@ saveClasspathTask := {
            (scala-version (plist-get config :scala-version)))
       (ensime--update-server scala-version `(lambda () (message "ENSIME server updated.")))))
 
-(defun ensime--maybe-update-and-start (&optional host port)
+(defun ensime--maybe-update-and-start (orig-buffer-file-name &optional host port)
   (if (and host port)
       ;; When both host and port are provided, we assume we're connecting to
       ;; an existing, listening server.
-      (let* ((config-file (ensime-config-find))
+      (let* ((config-file (ensime-config-find orig-buffer-file-name))
 	     (config (ensime-config-load config-file))
 	     (cache-dir (file-name-as-directory (ensime--get-cache-dir config))))
 	(ensime--retry-connect nil host (lambda () port) config cache-dir))
-    (let* ((config-file (ensime-config-find))
+    (let* ((config-file (ensime-config-find orig-buffer-file-name))
            (config (ensime-config-load config-file))
            (scala-version (plist-get config :scala-version))
            (assembly-file (ensime--assembly-file scala-version))
@@ -96,9 +96,9 @@ saveClasspathTask := {
           (ensime--update-server scala-version `(lambda () (ensime--1 ,config-file)))
         (ensime--1 config-file)))))
 
-(defun ensime--maybe-update-and-start-noninteractive ()
+(defun ensime--maybe-update-and-start-noninteractive (orig-buffer-file-name)
   (let ((ensime-prefer-noninteractive t))
-    (ensime--maybe-update-and-start)))
+    (ensime--maybe-update-and-start orig-buffer-file-name)))
 
 (defun* ensime--1 (config-file)
   (when (and (ensime-source-file-p) (not ensime-mode))
@@ -183,7 +183,7 @@ Analyzer will be restarted."
 (defun ensime--assembly-file (scala-version)
   "The expected location of a manually produced assembly file.
 If such a file is present, it will override the `ensime--classpath-file' and
-`ensime-update' will not be automatically called."
+the ensime server will not be automatically updated."
   (expand-file-name
    (format "ensime_%s-%s-assembly.jar" (ensime--scala-binary-version scala-version) ensime-server-version)
    (ensime--user-directory)))
