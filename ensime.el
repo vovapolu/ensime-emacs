@@ -79,17 +79,18 @@
   "Read config file for settings. Then start an inferior
    ENSIME server and connect to its Swank server."
   (interactive)
-  (let ((orig-buffer-file-name buffer-file-name))
-    (condition-case ex
-        (if ensime-auto-generate-config
-            (ensime--maybe-refresh-config
-             nil
-             '(ensime--maybe-update-and-start-noninteractive orig-buffer-file-name)
-             '(lambda (reason) (ensime--maybe-update-and-start-noninteractive orig-buffer-file-name)))
-          (ensime--maybe-update-and-start orig-buffer-file-name))
-      ('error (error (format
-                      "check that sbt is on your PATH and that your config is compatible with %s [%s]"
-                      "http://github.com/ensime/ensime-server/wiki/Example-Configuration-File" ex))))))
+  ; We have to use setq instead of let here because of scoping
+  (setq orig-bfn buffer-file-name)
+  (condition-case ex
+      (if ensime-auto-generate-config
+          (ensime--maybe-refresh-config
+           nil
+           '(lambda () (ensime--maybe-update-and-start-noninteractive orig-bfn))
+           '(lambda (reason) (ensime--maybe-update-and-start-noninteractive orig-bfn)))
+        (ensime--maybe-update-and-start orig-bfn))
+    ('error (error (format
+                    "check that sbt is on your PATH and that your config is compatible with %s [%s]"
+                    "http://github.com/ensime/ensime-server/wiki/Example-Configuration-File" ex)))))
 
 ;;;###autoload
 (defun ensime-remote (host port)
