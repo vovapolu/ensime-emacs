@@ -127,10 +127,6 @@ saveClasspathTask := {
            (port-fn (lambda () (ensime--read-portfile
                              (concat cache-dir "/port")))))
 
-
-      ;; Surface the server buffer so user can observe the startup progress.
-      (display-buffer (process-buffer server-proc) nil)
-
       ;; Store the config on the server process so we can identify it later.
       (process-put server-proc :ensime-config config)
       (push server-proc ensime-server-processes)
@@ -206,11 +202,7 @@ the ensime server will not be automatically updated."
    ((equal event "finished\n")
     (let ((classpath-file (ensime--classpath-file scala-version)))
       (if (file-exists-p classpath-file)
-          (progn
-            (-when-let
-                (win (get-buffer-window (process-buffer process)))
-              (delete-window win))
-            (funcall on-success-fn))
+          (funcall on-success-fn)
         (message "Could not create classpath file %s" classpath-file))))
    (t
     (message "Process %s exited: %s" process event))))
@@ -360,17 +352,7 @@ defined."
 	(t
 	 (let ((port (funcall port-fn)))
 	   (if port
-	       (progn
-		 (ensime--connect host port config)
-		 ;; Kill the window displaying the server buffer if it's still
-		 ;; visible.
-		 (-when-let
-                     (win (get-buffer-window (process-buffer server-proc)))
-                   (cond
-                    ((window-parent)
-                     (delete-window win))
-                    (t
-                     (switch-to-prev-buffer nil t)))))
+           (ensime--connect host port config)
 	     (run-at-time
 	      "6 sec" nil 'ensime-timer-call 'ensime--retry-connect
 	      server-proc host port-fn config cache-dir))))))
