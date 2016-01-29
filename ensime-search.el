@@ -28,6 +28,9 @@
 (defvar ensime-search-mode nil
   "Enables the ensime-search minor mode.")
 
+(defvar ensime-search-mode-hook nil
+  "Hooks to run after entering ensime-search-mode")
+
 (defvar ensime-search-buffer-name "*ensime-search*"
   "Buffer to use for ensime-search.")
 
@@ -154,7 +157,7 @@
   "Major mode for incrementally seaching through all open buffers."
   (interactive)
   (setq major-mode 'ensime-search-mode
-        mode-name "ensime-search-mode")
+        mode-name "ensime-search")
 
   (use-local-map ensime-search-mode-map)
 
@@ -169,7 +172,7 @@
 	    'ensime-search-auto-update)
   (make-local-variable 'ensime-search-kill-buffer)
   (add-hook 'kill-buffer-hook 'ensime-search-kill-buffer nil t)
-  )
+  (run-hooks 'ensime-search-mode-hook))
 
 
 (defun ensime-search-quit ()
