@@ -922,6 +922,17 @@
     (ensime-assert-equal (ensime-strip-dollar-signs "com.example.Foo$$Junk")
                          "com.example.Foo.Junk"))
 
+   (ensime-test
+    "Test ensime-parse-type-info-from-fqn"
+    (dolist (fqn '("scala.X"
+		   "Foo"
+		   "scala.collection.List[Option[Boolean]]"
+		   "scala.Function1[Char, Boolean]"
+		   "scala.collection.:=>[X, Y[Z, Q$R]]"
+		   "scala.collection.<repeated...>[X, Y, Z]"
+		   ))
+      (ensime-assert-equal
+       (ensime-type-full-name-with-args (ensime-parse-type-info-from-fqn fqn)) fqn)))
 
    (ensime-test
     "Test ensime-path-includes-dir-p"
@@ -1300,7 +1311,7 @@
                                  "    i.toString"
                                  "  }"
                                  "  def doBlock(block:(Int => String)) = {"
-                                 "    block()"
+                                 "    block(1)"
                                  "  }"
                                  "  def doByName(block: => String) = {"
                                  "    block"

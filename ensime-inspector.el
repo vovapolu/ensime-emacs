@@ -74,17 +74,14 @@ A prefix argument will add the type to the kill ring."
       (setq accum (concat accum ".")))))
 
 
-(defun ensime-make-inspect-type-action (type-id type-full-name)
-  (if (and type-full-name
-           (not (string-match "<refinement>\\|\\$\\$anon\\>" type-full-name)))
+(defun ensime-make-inspect-type-action (type-full-name)
+  (when (and type-full-name
+	     (not (string-match "<refinement>\\|\\$\\$anon\\>" type-full-name)))
       `(lambda (x)
          (ensime-type-inspector-show
-          (ensime-rpc-inspect-type-by-name ,type-full-name)))
-    `(lambda (x)
-       (ensime-type-inspector-show
-        (ensime-rpc-inspect-type-by-id ,type-id)))))
+          (ensime-rpc-inspect-type-by-name ,type-full-name)))))
 
-(defun ensime-inspector-insert-link-to-type (text type-id type-full-name is-obj)
+(defun ensime-inspector-insert-link-to-type (text type-full-name is-obj)
   "A helper for type link insertion. See usage in
  ensime-inspector-insert-linked-type. If is-obj is
  non-nil, use an alternative color for the link."
@@ -92,7 +89,7 @@ A prefix argument will add the type to the kill ring."
    (:ensime-type-full-name type-full-name)
    (ensime-insert-action-link
     text
-    (ensime-make-inspect-type-action type-id type-full-name)
+    (ensime-make-inspect-type-action type-full-name)
     (if is-obj font-lock-constant-face font-lock-type-face))))
 
 (defun ensime-inspector-insert-linked-type
@@ -114,20 +111,20 @@ A prefix argument will add the type to the kill ring."
            (path outer-type-name name)
 	   (when path
 	     (ensime-inspector-insert-linked-package-path path))
-	   (if (and outer-type-name (integerp (ensime-outer-type-id type)))
+	   (if outer-type-name
 	       (progn
 		 (ensime-inspector-insert-link-to-type
-		  outer-type-name (ensime-outer-type-id type) (concat path "." outer-type-name) nil)
+		  outer-type-name (concat path "." outer-type-name) nil)
 		 (insert "$")
 		 (ensime-inspector-insert-link-to-type
-		  name (ensime-type-id type) type-full-name is-obj))
+		  name type-full-name is-obj))
 	     (progn
 	       (ensime-inspector-insert-link-to-type
-		name (ensime-type-id type) type-full-name is-obj))))
+		name type-full-name is-obj))))
 
 	;; Otherwise, insert short name..
 	(ensime-inspector-insert-link-to-type
-	 (ensime-type-name type) (ensime-type-id type) type-full-name is-obj))
+	 (ensime-type-name type) type-full-name is-obj))
 
       (when type-args
 	(let ((ensime-indent-level 0))
@@ -271,7 +268,6 @@ A prefix argument will add the type to the kill ring."
       (message "Cannot inspect nil type.")
     (let* ((interfaces (plist-get info :interfaces))
 	   (type (plist-get info :type))
-	   (companion-id (plist-get info :companion-id))
 	   (buffer-name ensime-inspector-buffer-name)
 	   (ensime-indent-level 0)
 	   (focus-point nil))
@@ -290,12 +286,11 @@ A prefix argument will add the type to the kill ring."
 	   (ensime-inspector-insert-linked-type type t t)
 	   (insert "\n")
 
-	   ;; Insert a link to the companion object or class, if extant
-	   (-when-let (id companion-id)
-             (ensime-inspector-insert-link-to-type
-              "(companion)" id
-              (ensime-companion-type-name full-type-name)
-              (not (ensime-type-is-object-p type))))
+	   ;; Insert a link to the companion object or class
+	   (ensime-inspector-insert-link-to-type
+	    "(companion)"
+	    (ensime-companion-type-name full-type-name)
+	    (not (ensime-type-is-object-p type)))
 
 	   ;; Display each member, arranged by owner type
 	   (dolist (interface interfaces)
