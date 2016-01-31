@@ -138,7 +138,7 @@
 	 (name-start-point (- (point) (length name)))
 	 (is-scala (ensime-scala-file-p buffer-file-name))
 	 (call-info
-	  (when is-callable (ensime-call-completion-info candidate is-scala)))
+	  (when is-callable (ensime-call-completion-info candidate)))
 	 (param-sections
 	  (when is-callable
 	    (-filter

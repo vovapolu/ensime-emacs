@@ -91,8 +91,7 @@ be used later to give contextual help when entering arguments."
     ;; information to show parameter hints.
     (when is-callable
 
-      (let* ((call-info (ensime-call-completion-info
-			 candidate (ensime-scala-file-p buffer-file-name)))
+      (let* ((call-info (ensime-call-completion-info candidate))
 	     (param-sections (ensime-type-param-sections call-info)))
 	(when (and call-info param-sections)
 

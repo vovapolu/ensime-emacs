@@ -31,9 +31,6 @@
 (defun ensime-symbol-is-callable (sym)
   (plist-get sym :is-callable))
 
-(defun ensime-symbol-owner-type-id (sym)
-  (plist-get sym :owner-type-id))
-
 (defun ensime-package-name (info)
   (plist-get info :name))
 
@@ -52,14 +49,8 @@
 (defun ensime-type-name (type)
   (plist-get type :name))
 
-(defun ensime-type-id (type)
-  (plist-get type :type-id))
-
 (defun ensime-type-is-object-p (type)
   (equal (plist-get type :decl-as) 'object))
-
-(defun ensime-outer-type-id (type)
-  (plist-get type :outer-type-id))
 
 (defun ensime-type-full-name (type)
   (if (plist-get type :arrow-type)
@@ -71,9 +62,9 @@
       (plist-get type :name)
     (concat
      (plist-get type :full-name)
-     (ensime-type-type-args-postfix type))))
+     (ensime-type-type-args-suffix type))))
 
-(defun ensime-type-type-args-postfix (type)
+(defun ensime-type-type-args-suffix (type)
   (let ((args (ensime-type-type-args type)))
     (if args
 	(concat "["
@@ -88,13 +79,71 @@
 
 (defun ensime-type-name-with-args (type)
   (concat (plist-get type :name)
-      (ensime-type-type-args-postfix type)))
+      (ensime-type-type-args-suffix type)))
 
 (defun ensime-type-is-function-p (type)
   (string-match "^scala.Function[0-9]*" (plist-get type :full-name)))
 
 (defun ensime-type-is-by-name-p (type)
   (string-match "^scala.<byname>" (plist-get type :full-name)))
+
+(defun ensime-parse-type-info-from-fqn (fqn)
+  "Returns a type-info structure parsed from an fqn, e.g.
+ scala.foo.Foo[scala.Option[Int]]"
+  (let ((s fqn) (i 0))
+    (let ((ast (ensime--parse-type-from-fqn)))
+      (ensime--build-type-info ast))))
+
+(defun ensime--build-type-info (ast)
+  (let* ((local-name (nth 1 ast))
+	 (path (nth 0 ast))
+	 (full-name (concat (if (> (length path) 0) (concat path ".") "") local-name))
+	 (args (nth 2 ast)))
+    `(:name ,local-name
+      :full-name ,full-name
+      :type-args ,(mapcar 'ensime--build-type-info args))))
+
+(defconst ensime--ident-re "\\(?:<.+?>\\|[^][\\., ]+\\)")
+(defconst ensime--fqn-re (concat "\\(\\(?:" ensime--ident-re "\\.\\)" "*" "\\)" "\\(" ensime--ident-re "\\)"))
+(defconst ensime--type-args-re "\\[\\(.+?\\)\\]$")
+
+(defun ensime--parse-type-from-fqn ()
+  (when (and (< i (length s)) (ensime--match-re ensime--fqn-re))
+      (let* ((path (match-string 1 s))
+	     (local-name (match-string 2 s))
+	     (args (when (ensime--parse-one ?\[)
+		     (let ((args (ensime--parse-delimited
+				  'ensime--parse-type-from-fqn
+				  ensime--parser-commas-ws)))
+		       (when args
+			 (ensime--parse-one ?\])
+			 args)))))
+	(list (s-chop-suffix "." path) local-name args))))
+
+(defun ensime--parse-one (char)
+  (when (and (< i (length s)) (eq (aref s i) char))
+    (incf i)
+    t))
+
+(defun ensime--parse-one-or-more (chars)
+  (let ((j i))
+    (while (and (< j (length s)) (memq (aref s j) chars)) (incf j))
+    (when (> j i) (setq i j) t)))
+
+(defun ensime--match-re (re)
+  (let ((index (string-match re s i)))
+    (when (eq index i)
+      (setq i (match-end 0)) t)))
+
+(defvar ensime--parser-commas-ws '(lambda () (ensime--parse-one-or-more (list ?, ? ))))
+
+(defun ensime--parse-delimited (fn delim-fn)
+  (let ((parsed nil)
+	(result (funcall fn)))
+    (while result
+      (setq parsed (cons result parsed))
+      (setq result (when (funcall delim-fn) (funcall fn))))
+    (reverse parsed)))
 
 (defun ensime-declared-as (obj)
   (plist-get obj :decl-as))
@@ -196,9 +245,12 @@
 
 (defun ensime-brief-type-sig (completion-type-sig)
   "Return a formatted string representing the given method signature."
-  ;;(ensime-brief-type-sig '(((("aemon" "Person"))) "Dude"))
+  ;;(ensime-brief-type-sig '(((("foo" "Person"))) "Dude"))
+  ;;(ensime-brief-type-sig '(((("bar" "scala.collection.Person[X[Y]]"))) "Dude[Y]"))
   (let* ((sections (car completion-type-sig))
-	 (return-type (cadr completion-type-sig)))
+	 (return-type (ensime-parse-type-info-from-fqn
+		       (cadr completion-type-sig)))
+	 (return-name (ensime-type-name-with-args return-type)))
     (if sections
 	(format "%s: %s"
 		(mapconcat
@@ -206,10 +258,14 @@
 		   (format "(%s)"
 			   (mapconcat
 			    (lambda (param-pair)
-			      (format "%s: %s" (car param-pair) (cadr param-pair)))
+			      (let* ((name (car param-pair))
+				     (fqn (cadr param-pair))
+				     (tpe (ensime-parse-type-info-from-fqn fqn)))
+				(format "%s: %s" name (ensime-type-name-with-args tpe))))
 			    section ", ")))
-		 sections "=>") return-type)
-      return-type)))
+		 sections "=>")
+		return-name)
+      return-name)))
 
 
 (provide 'ensime-model)
