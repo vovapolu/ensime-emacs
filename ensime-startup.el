@@ -235,6 +235,14 @@ the ensime server will not be automatically updated."
             (message "Updating ENSIME server..."))
         (error "sbt command not found")))))
 
+(defun ensime--monkeys-first (classpath)
+  "The ensime-monkeys jar must appear ahead at the head of the classpath."
+  (sort (copy-sequence classpath)
+        (lambda (a b)
+          (cond
+           ((string-match ".*monkeys.*" a) t)
+           (t nil)))))
+
 (defun ensime--start-server (buffer java-home scala-version flags user-env config-file cache-dir)
   "Start an ensime server in the given buffer and return the created process.
 BUFFER is the buffer to receive the server output.
@@ -250,11 +258,12 @@ CACHE-DIR is the server's persistent output directory."
            (classpath-file (ensime--classpath-file scala-version))
            (scala-compiler-jars (plist-get config :scala-compiler-jars))
            (server-classpath (if (file-exists-p assembly-file)
-                                 (s-join ensime--classpath-separator
-                                         (cons assembly-file scala-compiler-jars))
-                               (ensime-read-from-file classpath-file)))
+                                 (cons assembly-file scala-compiler-jars)
+                               (ensime--monkeys-first
+                                (s-split ensime--classpath-separator
+                                         (ensime-read-from-file classpath-file)))))
            (classpath (s-join ensime--classpath-separator
-                              (list tools-jar server-classpath)))
+                              (append server-classpath (list tools-jar))))
            (process-environment (append user-env process-environment))
            (java-command (concat java-home "bin/java"))
            (args (-flatten (list
