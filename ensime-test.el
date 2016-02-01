@@ -148,9 +148,10 @@
     (mapcar (lambda (d) (-> (expand-file-name d root-dir) (mkdir t))) extra-subproject-dirs)
 
     (when ensime--test-cached-project
-      (message "Copying %s to %s"
-	       (plist-get ensime--test-cached-project :cache-dir)
-	       cache-dir)
+      (when ensime--debug-messages
+        (message "Copying %s to %s"
+                 (plist-get ensime--test-cached-project :cache-dir)
+                 cache-dir))
       (copy-directory (plist-get ensime--test-cached-project :cache-dir)
 		      cache-dir nil t t)
       (when (file-exists-p (expand-file-name "port" cache-dir))
@@ -230,7 +231,8 @@
                (or (integerp (string-match "^/tmp/" root-dir))
                    (integerp (string-match "/Temp/" root-dir))))
       ;; ..before we wipe away the project dir
-      (message "Deleting %s" root-dir)
+      (when ensime--debug-messages
+        (message "Deleting %s" root-dir))
       (with-current-buffer ensime-testing-buffer
         (delete-directory root-dir t)))))
 
@@ -262,10 +264,12 @@
   "Driver for asynchonous tests. This function is invoked from ensime core,
    signaling events to events handlers installed by asynchronous tests."
   (when (buffer-live-p (get-buffer ensime-testing-buffer))
-    (message "pending rpcs: %s" ensime--test-pending-rpcs)
+    (when ensime--debug-messages
+      (message "pending rpcs: %s" ensime--test-pending-rpcs))
     (when (> (length ensime--test-pending-rpcs) 1)
       (message "WARNING more than one pending message"))
-    (message "Received test event: %s" event)
+    (when ensime--debug-messages
+      (message "Received test event: %s" event))
     (with-current-buffer ensime-testing-buffer
       (when (not (null ensime-async-handler-stack))
         (let* ((ensime-prefer-noninteractive t)
@@ -274,14 +278,16 @@
                (handler-events (plist-get handler :events)))
           (cond
            (ensime-stack-eval-tags
-            (message "Got %s/%s while in a synchronous call, ignoring"
-                     event value))
+            (when ensime--debug-messages
+              (message "Got %s/%s while in a synchronous call, ignoring"
+                       event value)))
 
            ((and (equal (list event) handler-events)
                  (or (null guard-func) (funcall guard-func value)))
             (let ((handler-func (plist-get handler :func))
                   (is-last (plist-get handler :is-last)))
-              (message "Handling test event: %s/%s" event handler)
+              (when ensime--debug-messages
+                (message "Handling test event: %s/%s" event handler))
               (pop ensime-async-handler-stack)
               (save-excursion
                 (condition-case signal
@@ -297,15 +303,17 @@
 
            ((and (> (length handler-events) 1)
 		 (member event handler-events))
-            (message "Received %s/%s expecting %s with guard func %s. Waiting for the rest"
-                     event value handler-events guard-func)
+            (when ensime--debug-messages
+              (message "Received %s/%s expecting %s with guard func %s. Waiting for the rest"
+                       event value handler-events guard-func))
             (setq handler-events (cl-remove event handler-events :count 1))
             (setq handler (plist-put handler :events handler-events))
             (setcar ensime-async-handler-stack handler))
 
            (t
-            (message "Got %s/%s, expecting %s with guard %s. Ignoring event."
-                     event value handler-events guard-func))))))))
+            (when ensime--debug-messages
+              (message "Got %s/%s, expecting %s with guard %s. Ignoring event."
+                       event value handler-events guard-func)))))))))
 
 
 (defun ensime-run-suite (suite)
@@ -521,7 +529,8 @@
         (message "ERROR no response to messages: %s"
                  ensime--test-pending-rpcs)
         (setq ensime--test-had-failures t))
-    (message "OK no unreplied messages"))
+    (when ensime--debug-messages
+      (message "OK no unreplied messages")))
   (ensime-kill-all-ensime-servers)
 					; In Windows, we can't delete cache files until the server process has exited
   (sleep-for 1)
