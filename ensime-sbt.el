@@ -104,8 +104,8 @@ string.
 Results in the same module name, but with brackets enclosing the
 abbreviation character."
   (let ((left (s-left li module))
-	(prompt-abbrev (char-to-string abbrev))
-	(right (-> (- (length module) ri) (s-right module))))
+        (prompt-abbrev (char-to-string abbrev))
+        (right (-> (- (length module) ri) (s-right module))))
     (s-concat left "[" prompt-abbrev "]" right)))
 
 (defun ensime-sbt-prompt-char-indices (module li ri module-prompt-clauses)
@@ -123,65 +123,46 @@ character use it, otherwise move on to the next character and try
 again."
   (let ((abbrev (-> (substring module li ri) string-to-char)))
     (if (eq nil (assoc abbrev module-prompt-clauses))
-	(list abbrev li ri)
+        (list abbrev li ri)
       (ensime-sbt-prompt-char-indices module (+ 1 li) (+ 1 ri) module-prompt-clauses))))
-
-(defun ensime-sbt-module-prompt-clauses ()
-  "Creates the module prompt associative list, used during prompting.
-
-From ensime config file, get subproject names, and transform them
-into an associative list with elements
-  (char-abbrev module-prompt-string module-name)"
-  (let* ((config (-> (ensime-connection) ensime-config))
-	 (subprojects (->> (plist-get config :subprojects)
-			   (-map (lambda (sp) (plist-get sp :name)))))
-	 (module-clauses
-	  (let (prompt-clauses)
-	    (-each subprojects
-	      (lambda (sp)
-		(let* ((ai (ensime-sbt-prompt-char-indices sp 0 1 prompt-clauses))
-		       (prompt (apply 'ensime-sbt-module-prompt sp ai))
-		       (new-clauses (cons (list (car ai) prompt sp) prompt-clauses)))
-		  (setq prompt-clauses new-clauses))))
-	    prompt-clauses)))
-    module-clauses))
 
 (defun ensime-sbt-prompt-for-test ()
   "Prompt sequence when `*-test-dwim' can't figure out what to do."
   (let ((module
-	 (ensime-sbt-read-char-prompt
-	  "Do you want to run from module " t ensime-sbt-module-prompt-clauses))
-	(source-set
-	 (ensime-sbt-read-char-prompt "Do you want to run from " t
-				      (?t "[t]est" "")
-				      (?i "[i]t" "it:")
-				      (?f "[f]un" "fun:")))
-	(task
-	 (ensime-sbt-read-char-prompt "Do you want to run " t
-				      (?t "[t]est" "test")
-				      (?o "test-[o]nly" "testOnly")
-				      (?q "test-[q]uick" "testQuick"))))
+         (completing-read "Do you want to run from module "
+                          (->> (-> (ensime-connection) ensime-config (plist-get :subprojects))
+                               (-map (lambda (sp) (plist-get sp :name))))))
+        (source-set
+         (ensime-sbt-read-char-prompt "Do you want to run from " t
+                                      (?t "[t]est" "")
+                                      (?i "[i]t" "it:")
+                                      (?f "[f]un" "fun:")))
+        (task
+         (ensime-sbt-read-char-prompt "Do you want to run " t
+                                      (?t "[t]est" "test")
+                                      (?o "test-[o]nly" "testOnly")
+                                      (?q "test-[q]uick" "testQuick"))))
     (concat module "/" source-set task)))
 
 (defun ensime-sbt-find-subproject (file-name source-set)
   (when source-set
     (let* ((config (-> (ensime-connection) ensime-config))
-	   (subprojects (plist-get config :subprojects))
-	   (matches-subproject-dir? (lambda (dir) (string-match-p dir file-name)))
-	   (find-subproject (lambda (sp)
-			      (-any matches-subproject-dir? (plist-get sp :source-roots)))))
+           (subprojects (plist-get config :subprojects))
+           (matches-subproject-dir? (lambda (dir) (string-match-p dir file-name)))
+           (find-subproject (lambda (sp)
+                              (-any matches-subproject-dir? (plist-get sp :source-roots)))))
       (-> (-find find-subproject subprojects) (plist-get :name)))))
 
 (defun ensime-sbt-test-dwim (command)
   (let* ((file-name (or buffer-file-name default-directory))
-	 (source-set (cond
-		      ((string-match-p "src/test" file-name) "")
-		      ((string-match-p "src/it" file-name) "it:")
-		      ((string-match-p "src/fun" file-name) "fun:"))))
+         (source-set (cond
+                      ((string-match-p "src/test" file-name) "")
+                      ((string-match-p "src/it" file-name) "it:")
+                      ((string-match-p "src/fun" file-name) "fun:"))))
     (if source-set
-	(-> (ensime-sbt-find-subproject file-name source-set)
-	    (concat "/" source-set command)
-	    sbt-command)
+        (-> (ensime-sbt-find-subproject file-name source-set)
+            (concat "/" source-set command)
+            sbt-command)
       (-> (ensime-sbt-prompt-for-test) sbt-command))))
 
 (defun ensime-sbt-do-test-dwim ()
@@ -195,10 +176,10 @@ into an associative list with elements
 (defun ensime-sbt-do-test-only-dwim ()
   (interactive)
   (let* ((impl-class
-	  (or (ensime-top-level-class-closest-to-point)
-	      (return (message "Could not find top-level class"))))
-	 (cleaned-class (replace-regexp-in-string "<empty>\\." "" impl-class))
-	 (command (concat "test-only" " " cleaned-class)))
+          (or (ensime-top-level-class-closest-to-point)
+              (return (message "Could not find top-level class"))))
+         (cleaned-class (replace-regexp-in-string "<empty>\\." "" impl-class))
+         (command (concat "test-only" " " cleaned-class)))
     (ensime-sbt-test-dwim command)))
 
 
