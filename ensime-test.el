@@ -768,6 +768,53 @@
         "}"))))
 
    (ensime-test
+    "Test ensime-insert-import with no package or import statement in java file"
+    (with-temp-buffer
+      (set-visited-file-name "/tmp/fake/dir/abc.java" t)
+      (insert (ensime-test-concat-lines
+               "class C {"
+               "  int f = 1; /*1*/"
+               "}"))
+      (goto-char (ensime-test-after-label "1"))
+
+      (ensime-insert-import "org.example")
+      (set-buffer-modified-p nil)
+
+      (ensime-assert-equal
+       (buffer-substring-no-properties (point-min) (point-max))
+       (ensime-test-concat-lines
+        "import org.example;"
+        ""
+        "class C {"
+        "  int f = 1; /*1*/"
+        "}"))))
+
+   (ensime-test
+    "Test ensime-insert-import with package statement in java file"
+    (with-temp-buffer
+      (set-visited-file-name "/tmp/fake/dir/abc.java" t)
+      (insert (ensime-test-concat-lines
+               "package com.example;"
+               "class C {"
+               "  int f = 1; /*1*/"
+               "}"))
+      (goto-char (ensime-test-after-label "1"))
+
+      (ensime-insert-import "org.example")
+      (set-buffer-modified-p nil)
+
+      (ensime-assert-equal
+       (buffer-substring-no-properties (point-min) (point-max))
+       (ensime-test-concat-lines
+        "package com.example;"
+        ""
+        "import org.example;"
+        ""
+        "class C {"
+        "  int f = 1; /*1*/"
+        "}"))))
+
+   (ensime-test
     "Test ensime-insert-import with package statement"
     (with-temp-buffer
       (set-visited-file-name "/tmp/fake/dir/abc.scala" t)
@@ -826,6 +873,39 @@
         "}"))))
 
    (ensime-test
+    "Test ensime-insert-import with import statement in java file"
+    (with-temp-buffer
+      (set-visited-file-name "/tmp/fake/dir/abc.java" t)
+      (insert (ensime-test-concat-lines
+               "import m;"
+               ""
+               ""
+               "import n;"
+               ""
+               "import p;"
+               "class C {"
+               "  int f = 1; /*1*/"
+               "}"))
+      (goto-char (ensime-test-after-label "1"))
+
+      (ensime-insert-import "org.example")
+      (set-buffer-modified-p nil)
+
+      (ensime-assert-equal
+       (buffer-substring-no-properties (point-min) (point-max))
+       (ensime-test-concat-lines
+        "import m;"
+        ""
+        ""
+        "import n;"
+        "import org.example;"
+        ""
+        "import p;"
+        "class C {"
+        "  int f = 1; /*1*/"
+        "}"))))
+
+   (ensime-test
     "Test ensime-insert-import stays above point"
     (with-temp-buffer
       (set-visited-file-name "/tmp/fake/dir/abc.scala" t)
@@ -846,6 +926,62 @@
         "  import org.example"
         "  import example._ /*1*/"
         "  def f = 1"
+        "}"))))
+
+   (ensime-test
+    "Test ensime-insert-import groups classes under the same package"
+    (with-temp-buffer
+      (set-visited-file-name "/tmp/fake/dir/abc.scala" t)
+      (insert (ensime-test-concat-lines
+               "package test"
+               ""
+               "import org.example.Example2"
+               ""
+               "class C {"
+               "  def f = 1 /*1*/"
+               "}"))
+      (goto-char (ensime-test-after-label "1"))
+
+      (ensime-insert-import "org.example.Example1")
+      (set-buffer-modified-p nil)
+
+      (ensime-assert-equal
+       (buffer-substring-no-properties (point-min) (point-max))
+       (ensime-test-concat-lines
+        "package test"
+        ""
+        "import org.example.{ Example1, Example2 }"
+        ""
+        "class C {"
+        "  def f = 1 /*1*/"
+        "}"))))
+
+   (ensime-test
+    "Test ensime-insert-import groups classes under the same package previously grouped"
+    (with-temp-buffer
+      (set-visited-file-name "/tmp/fake/dir/abc.scala" t)
+      (insert (ensime-test-concat-lines
+               "package test"
+               ""
+               "import org.example.{ ClassA => AsB, Example2, Example3 }"
+               ""
+               "class C {"
+               "  def f = 1 /*1*/"
+               "}"))
+      (goto-char (ensime-test-after-label "1"))
+
+      (ensime-insert-import "org.example.Example1")
+      (set-buffer-modified-p nil)
+
+      (ensime-assert-equal
+       (buffer-substring-no-properties (point-min) (point-max))
+       (ensime-test-concat-lines
+        "package test"
+        ""
+        "import org.example.{ ClassA => AsB, Example1, Example2, Example3 }"
+        ""
+        "class C {"
+        "  def f = 1 /*1*/"
         "}"))))
 
    (ensime-test
