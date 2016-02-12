@@ -30,7 +30,10 @@
  ;; optional dependencies (used in the tests)
  (depends-on "auto-complete")
  ;;(depends-on "expand-region")
-
+ (depends-on "f")
+ (depends-on "ert-runner")
+ (depends-on "ecukes")
+ (depends-on "espuds")
  ; genuine dev dependencies
  (depends-on "undercover"))
 
