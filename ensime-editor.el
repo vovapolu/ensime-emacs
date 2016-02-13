@@ -1,4 +1,11 @@
-;;; ensime-editor.el  -- Editor and navigation commands
+;;; ensime-editor.el -- Editor and navigation commands -*- lexical-binding: t -*-
+
+;; Copyright (C) 2015 ENSIME authors
+;; License: http://www.gnu.org/licenses/gpl.html
+
+;;; Commentary:
+;;
+;;; Code:
 
 (eval-when-compile
   (require 'cl)
@@ -486,50 +493,182 @@ currently open in emacs."
               :end end
               :name (buffer-substring-no-properties start end))))))
 
-(defun ensime-insert-import (qualified-name)
-  "A simple, hacky import insertion."
-  (save-excursion
+(defun ensime-java-new-import (qualified-name)
+  (format "import %s;\n" qualified-name))
 
+(defun ensime-scala-new-import (qualified-name)
+  (format "import %s\n" qualified-name))
+
+(defun ensime-scala-new-import-grouped-package (base-package grouped-classes)
+  (format "import %s.{ %s }" base-package grouped-classes))
+
+(defun ensime-no-imports-in-buffer-p ()
+  (looking-at "^\\s-*package\\s-"))
+
+(defun ensime-import-block-in-buffer-p ()
+  (looking-at "^\\s-*import\\s-"))
+
+(defun ensime-same-base-package-p (current-import qualified-name)
+  "Compare CURRENT-IMPORT's package to QUALIFIED-NAME's package, returning true if they are equal."
+  (equal (->> current-import (s-split "\\.") -butlast)
+         (->> qualified-name (s-split "\\.") -butlast)))
+
+(defun ensime-past-starting-point (starting-point)
+  "Past STARTING-POINT of excursion.
+Should not insert past STARTING-POINT - move to beginning of line that STARTING-POINT is on.
+STARTING-POINT is the point where the `ensime-insert-import' was invoked from."
+  (when (>= (point) starting-point)
+    (goto-char starting-point)
+    (goto-char (point-at-bol))))
+
+(defun ensime-indent-line ()
+  (indent-region (point-at-bol) (point-at-eol)))
+
+(defun ensime-insert-new-import-no-imports-in-buffer (starting-point java-scala-new-import qualified-name)
+  "Insert new import when there are no current import statements in the buffer.
+STARTING-POINT is the point where the `ensime-insert-import' was invoked from.
+JAVA-SCALA-NEW-IMPORT is a function to format the import statement for either java or scala.
+QUALIFIED-NAME is the name to import.
+Returns a function/closure to invoke the necessary buffer operations to perform the insertion."
+  (lambda ()
+    (goto-char (point-at-eol))
+    (newline)
+    (newline)
+    (ensime-past-starting-point starting-point)
+    (save-excursion (insert (funcall java-scala-new-import qualified-name)))
+    (ensime-indent-line)))
+
+(defun ensime-insert-new-import-no-imports-or-package-in-buffer (starting-point java-scala-new-import qualified-name)
+  "Insert new import when there are no current import statements or package statement in the buffer.
+STARTING-POINT is the point where the `ensime-insert-import' was invoked from.
+JAVA-SCALA-NEW-IMPORT is a function to format the import statement for either java or scala.
+QUALIFIED-NAME is the name to import.
+Returns a function/closure to invoke the necessary buffer operations to perform the insertion."
+  (lambda ()
+    (unless (looking-at "^\s*$")
+     (newline)
+     (backward-char 1))
+    (ensime-past-starting-point starting-point)
+    (save-excursion (insert (funcall java-scala-new-import qualified-name)))
+    (ensime-indent-line)))
+
+(defun ensime-insert-new-import-next-line (starting-point java-scala-new-import qualified-name)
+  "Insert new import on the next line in the buffer.
+STARTING-POINT is the point where the `ensime-insert-import' was invoked from.
+JAVA-SCALA-NEW-IMPORT is a function to format the import statement for either java or scala.
+QUALIFIED-NAME is the name to import.
+Returns a function/closure to invoke the necessary buffer operations to perform the insertion."
+  (lambda ()
+    (if (equal (point) (point-max)) (newline) (forward-char 1))
+    (ensime-past-starting-point starting-point)
+    (save-excursion (insert (funcall java-scala-new-import qualified-name)))
+    (ensime-indent-line)))
+
+(defun ensime-insert-new-scala-import-grouped-package-next-line (current-import qualified-name)
+  "Insert new grouped import on the next line in the buffer, overriding the whole line.
+CURRENT-IMPORT is qualified name of the import line where the base package matches that of QUALIFIED-NAME.
+QUALIFIED-NAME is the name to import.
+Returns a function/closure to invoke the necessary buffer operations to perform the insertion."
+  (let* ((current-import-components (->> current-import (s-split "\\.")))
+         (base-package (->> current-import-components -butlast (s-join ".")))
+         (current-imports (->> current-import-components -last-item))
+         (qualified-class-name (->> qualified-name (s-split "\\.") -last-item))
+         (new-imports (->> current-imports (s-chop-prefix "{") (s-chop-suffix "}")
+                           (s-split ",") (-map 's-trim)
+                           (cons qualified-class-name) (-sort 's-less?) (s-join ", "))))
+    (lambda ()
+      (if (equal (point) (point-max)) (newline) (forward-char 1))
+      (kill-line)
+      (->> (ensime-scala-new-import-grouped-package base-package new-imports)
+           insert save-excursion)
+      (ensime-indent-line))))
+
+(defun ensime-java-new-import-insertion-decisioning-in-import-block (insertion-range starting-point qualified-name)
+  "Search through import statements in buffer above INSERTION-RANGE and STARTING-POINT.
+Decide what line to insert QUALIFIED-NAME."
+  (let ((looking-at-import? (looking-at "[\n\t ]*import\\s-\\(.+\\)\n"))
+        (matching-import (match-string 1)))
+    (cond
+     ;; insert at the end of the import block
+     ((not looking-at-import?) (ensime-insert-new-import-next-line starting-point 'ensime-java-new-import qualified-name))
+     ;; insert next line
+     ((not (s-less? matching-import qualified-name))
+      (ensime-insert-new-import-next-line starting-point 'ensime-java-new-import qualified-name))
+     ;; continue looking for insertion point
+     (t
+      (search-forward-regexp "^\\s-*import\\s-" insertion-range t)
+      (goto-char (point-at-eol))
+      (ensime-java-new-import-insertion-decisioning-in-import-block insertion-range starting-point qualified-name)))))
+
+(defun ensime-scala-new-import-insertion-decisioning-in-import-block (insertion-range starting-point qualified-name)
+  "Search through import statements in buffer above INSERTION-RANGE and STARTING-POINT.
+Decide what line to insert QUALIFIED-NAME."
+  (let ((looking-at-import? (looking-at "[\n\t ]*import\\s-\\(.+\\)\n"))
+        (matching-import (match-string 1)))
+    (cond
+     ;; insert at the end of the import block
+     ((not looking-at-import?) (ensime-insert-new-import-next-line starting-point 'ensime-scala-new-import qualified-name))
+     ;; same base package, insert on next line, overriding the entire line
+     ((ensime-same-base-package-p matching-import qualified-name)
+      (ensime-insert-new-scala-import-grouped-package-next-line matching-import qualified-name))
+     ;; insert next line
+     ((not (s-less? matching-import qualified-name))
+      (ensime-insert-new-import-next-line starting-point 'ensime-scala-new-import qualified-name))
+     ;; continue looking for insertion point
+     (t
+      (search-forward-regexp "^\\s-*import\\s-" insertion-range t)
+      (goto-char (point-at-eol))
+      (ensime-scala-new-import-insertion-decisioning-in-import-block insertion-range starting-point qualified-name)))))
+
+(defun ensime-insert-java-import (insertion-range starting-point qualified-name)
+  "A simple java import insertion in buffer above INSERTION-RANGE and STARTING-POINT.
+Decide what line to insert QUALIFIED-NAME."
+  (cond
+   ((ensime-no-imports-in-buffer-p)
+    (ensime-insert-new-import-no-imports-in-buffer starting-point
+                                                   'ensime-java-new-import
+                                                   qualified-name))
+   ((ensime-import-block-in-buffer-p)
+    (unless (equal (point) (point-min)) (backward-char))
+    (ensime-java-new-import-insertion-decisioning-in-import-block insertion-range
+                                                     starting-point
+                                                     qualified-name))
+   ;; Neither import nor package: stay at beginning of buffer
+   (t
+    (ensime-insert-new-import-no-imports-or-package-in-buffer starting-point
+                                                              'ensime-java-new-import
+                                                              qualified-name))))
+
+(defun ensime-insert-scala-import (insertion-range starting-point qualified-name)
+  "A simple scala import insertion in buffer above INSERTION-RANGE and STARTING-POINT.
+Decide what line to insert QUALIFIED-NAME."
+  (cond
+   ((ensime-no-imports-in-buffer-p)
+    (ensime-insert-new-import-no-imports-in-buffer starting-point
+                                                   'ensime-scala-new-import
+                                                   qualified-name))
+   ((ensime-import-block-in-buffer-p)
+    (unless (equal (point) (point-min)) (backward-char))
+    (ensime-scala-new-import-insertion-decisioning-in-import-block insertion-range
+                                                                   starting-point
+                                                                   qualified-name))
+   ;; Neither import nor package: stay at beginning of buffer
+   (t
+    (ensime-insert-new-import-no-imports-or-package-in-buffer starting-point
+                                                              'ensime-scala-new-import
+                                                              qualified-name))))
+
+(defun ensime-insert-import (qualified-name)
+  "A simple ensime import insertion in buffer of QUALIFIED-NAME."
+  (save-excursion
     (let ((insertion-range (point))
-          (starting-point (point)))
-      (unless
-          (search-backward-regexp "^\\s-*package\\s-" nil t)
+          (starting-point (point))
+          (insert-import-fn (if (ensime-visiting-java-file-p) 'ensime-insert-java-import 'ensime-insert-scala-import)))
+      (unless (search-backward-regexp "^\\s-*package\\s-" nil t)
         (goto-char (point-min)))
       (search-forward-regexp "^\\s-*import\\s-" insertion-range t)
       (goto-char (point-at-bol))
-
-      (cond
-       ;; No imports yet
-       ((looking-at "^\\s-*package\\s-")
-        (goto-char (point-at-eol))
-        (newline)
-        (newline))
-
-       ;; Found import block, insert alphabetically
-       ((looking-at "^\\s-*import\\s-")
-        (unless (equal (point) (point-min)) (backward-char))
-        (while (progn
-                 (if (looking-at "[\n\t ]*import\\s-\\(.+\\)\n")
-                     (let ((imported-name (match-string 1)))
-                       (string< imported-name qualified-name))))
-          (search-forward-regexp "^\\s-*import\\s-" insertion-range t)
-          (goto-char (point-at-eol)))
-        (if (equal (point) (point-max)) (newline) (forward-char 1)))
-
-       ;; Neither import nor package: stay at beginning of buffer
-       (t
-        (unless (looking-at "^\s*$")
-          (newline)
-          (backward-char 1))))
-
-      (when (>= (point) starting-point)
-        (goto-char starting-point)
-        (goto-char (point-at-bol)))
-      (save-excursion
-        (insert (format (cond ((ensime-visiting-scala-file-p) "import %s\n")
-                              ((ensime-visiting-java-file-p) "import %s;\n"))
-                        qualified-name)))
-      (indent-region (point-at-bol) (point-at-eol)))))
+      (funcall (funcall insert-import-fn insertion-range starting-point qualified-name)))))
 
 (defun ensime-import-type-at-point (&optional non-interactive)
   "Suggest possible imports of the qualified name at point.

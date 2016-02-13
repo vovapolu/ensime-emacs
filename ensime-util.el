@@ -409,7 +409,7 @@ offset of each line's last character, to the line number"
   offset-lines)
 
 (defun ensime-internalize-offset-for-file (file-name offset)
-  (let ((buf (find-buffer-visiting file)))
+  (let ((buf (find-buffer-visiting file-name)))
     (if buf
         (with-current-buffer buf
            (ensime-internalize-offset offset))
