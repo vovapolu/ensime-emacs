@@ -114,15 +114,18 @@ NO-REF-SOURCES allows skipping the extracted dependencies."
               (when (equal d prev)
                 (throw 'return nil)))))))))
 
+(defun ensime-default-config-file (&optional dir)
+  (expand-file-name ensime-config-file-name dir))
+
 (defun ensime-config-find-file (file-name)
   "Search up the directory tree starting at file-name
    for a suitable config file to load, return it's path. Return nil if
    no such file found."
   (let* ((dir (file-name-directory file-name))
-	 (possible-path (concat dir ensime-config-file-name)))
+	 (possible-path (ensime-default-config-file dir)))
     (when (and dir (file-directory-p dir))
       (if (file-exists-p possible-path)
-	  possible-path
+         possible-path
 	(if (not (equal dir (directory-file-name dir)))
 	    (ensime-config-find-file (directory-file-name dir)))))))
 
@@ -186,27 +189,38 @@ only sbt projects are supported."
    '(lambda () (message "ENSIME config updated."))
    '(lambda (reason) (message "ENSIME config not updated: %s" reason))))
 
+(defun ensime--config-and-generator (project-root)
+  "Returns a cons cell consisting of the config file
+corresponding to the current buffer, followed by the sbt task
+needed to regenerate that config file. (Doesn't understand nested
+project directories, because neither does ensime-sbt.)"
+  (if (equal (expand-file-name "project/" project-root) default-directory)
+      (cons (ensime-default-config-file) "gen-ensime-project")
+    (cons (ensime-default-config-file project-root) "gen-ensime")))
+
 (defun ensime--maybe-refresh-config (force after-refresh-fn no-refresh-fn)
   (let ((no-refresh-reason "couldn't detect project type"))
     (-when-let (project-root (sbt:find-root))
-      (let ((config-file (ensime--join-paths project-root ".ensime")))
+      (let* ((c-and-g (ensime--config-and-generator project-root))
+             (config-file (car c-and-g))
+             (generator-task (cdr c-and-g)))
         (if (or force
-                (ensime--config-sbt-needs-refresh-p project-root config-file))
+                (ensime--config-sbt-needs-refresh-p config-file))
             (progn
               (setq no-refresh-reason nil)
-              (ensime--refresh-config-sbt project-root after-refresh-fn))
+              (ensime--refresh-config-sbt project-root generator-task after-refresh-fn))
           (setq no-refresh-reason "config up to date"))))
 
     (when no-refresh-reason
       (funcall no-refresh-fn no-refresh-reason))))
 
-(defun ensime--refresh-config-sbt (project-root on-success-fn)
+(defun ensime--refresh-config-sbt (project-root task on-success-fn)
   (with-current-buffer (get-buffer-create "*ensime-gen-config*")
     (erase-buffer)
       (let ((default-directory project-root))
         (if (executable-find ensime-sbt-command)
             (let ((process (start-process "*ensime-gen-config*" (current-buffer)
-                                          ensime-sbt-command "gen-ensime")))
+                                          ensime-sbt-command task)))
               (display-buffer (current-buffer) nil)
         (set-process-sentinel process
                               `(lambda (process event)
@@ -225,10 +239,13 @@ only sbt projects are supported."
    (t
     (message "Process %s exited: %s" process event))))
 
-(defun ensime--config-sbt-needs-refresh-p (project-root config-file)
-  (let* ((sbt-project (ensime--join-paths project-root "project"))
+(defun ensime--config-sbt-needs-refresh-p (config-file)
+  (let* ((project-root (file-name-directory config-file))
+         (sbt-project (ensime--join-paths project-root "project"))
          (sbt-files (append (directory-files project-root t ".*\\.sbt")
-                            (directory-files sbt-project t ".*\\.scala"))))
+                            (if (file-exists-p sbt-project)
+                                (directory-files sbt-project t ".*\\.scala")
+                              nil))))
     (if sbt-files
         (ensime--dependencies-newer-than-target-p config-file sbt-files)
       nil)))
