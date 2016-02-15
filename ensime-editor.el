@@ -271,17 +271,16 @@
   (ensime-edit-definition 'frame))
 
 (defun ensime-edit-definition (&optional where)
-  "Lookup the definition of the name at point."
+  "Lookup the definition of the name at point.
+Goes to the point of the definition (returning point), or fails with `nil'."
   (interactive)
-
   (let* ((info (ensime-rpc-symbol-at-point))
-	 (pos (ensime-symbol-decl-pos info)))
+         (pos (ensime-symbol-decl-pos info)))
     (if (ensime-pos-valid-local-p pos)
-	(progn
-	  (ensime-push-definition-stack)
-	  (ensime-goto-source-location pos where))
-      (message "Sorry, no definition found."))))
-
+        (progn
+          (ensime-push-definition-stack)
+          (ensime-goto-source-location pos where))
+      (not (message "Sorry, ENSIME couldn't find the definition.")))))
 
 (defun ensime-files-equal-p (f1 f2)
   "Return t if file-names refer to same file."
