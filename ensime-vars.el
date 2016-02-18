@@ -237,11 +237,6 @@ and parameters."
   :type 'boolean
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-enable-beta nil
-  "If non-nil, Ensime will use diff api for refactoring."
-  :type 'boolean
-  :group 'ensime-ui)
-
 (defcustom ensime-refactor-preview nil
   "Enable or disable a refactor preview feature.
 Non-nil means Ensime will show a preview of the changes in the
