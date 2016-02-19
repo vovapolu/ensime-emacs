@@ -1066,16 +1066,6 @@ copies. All other objects are used unchanged. List must not contain cycles."
   (ensime-eval
    `(swank:exec-undo ,id)))
 
-(defun ensime-rpc-refactor-prepare
-  (proc-id refactor-type params non-interactive continue blocking)
-  (if blocking
-      (ensime-eval
-       `(swank:prepare-refactor
-	 ,proc-id ,refactor-type ,params ,(not non-interactive)))
-    (ensime-eval-async
-     `(swank:prepare-refactor
-       ,proc-id ,refactor-type ,params ,(not non-interactive)) continue)))
-
 (defun ensime-rpc-refactor-diff
     (proc-id params non-interactive continue blocking)
   (if blocking

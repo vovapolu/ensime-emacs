@@ -1673,37 +1673,6 @@
       (ensime-test-cleanup proj))))
 
    (ensime-async-test
-    "Test organize imports refactoring: remove unused import."
-    (let* ((proj (ensime-create-tmp-project
-                  `((:name
-                     "hello_world.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package com.helloworld"
-                                 "import scala.collection.immutable.Vector"
-                                 "class HelloWorld{"
-                                 "}"))))))
-      (ensime-test-init-proj proj))
-
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-refactor-organize-imports)))
-
-    ((:refactor-at-confirm-buffer)
-     (switch-to-buffer ensime-refactor-info-buffer-name)
-     (funcall (key-binding (kbd "c"))))
-
-    (:refactor-done touched-files t
-		    (ensime-test-with-proj
-		     (proj src-files)
-		     (ensime-assert
-		      (equal (length touched-files) 1))
-		     (goto-char (point-min))
-		     (ensime-assert (null (search-forward "import scala.collection.immutable.Vector" nil t)))
-		     (ensime-test-cleanup proj))))
-
-   (ensime-async-test
     "Test organize imports diff refactoring: remove unused import."
     (let* ((proj (ensime-create-tmp-project
                   `((:name
@@ -1733,71 +1702,6 @@
                                                          "}"
                                                          "")))
                              (ensime-test-cleanup proj))))
-
-   (ensime-async-test
-    "Test rename refactoring over multiple files."
-    (let* ((proj (ensime-create-tmp-project
-                  `((:name
-                     "hello_world.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package com.helloworld"
-                                 "class /*1*/HelloWorld{"
-                                 "}"))
-                    (:name
-                     "another.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package com.helloworld"
-                                 "object Another {"
-                                 "def main(args:Array[String]) {"
-                                 "val a = new HelloWorld()"
-                                 "}"
-                                 "}"))))))
-      (ensime-test-init-proj proj))
-
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      ;; refactor-rename needs all files to be typechecked
-      (ensime-typecheck-all)))
-
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-assert (null (ensime-all-notes))))
-     (goto-char (ensime-test-after-label "1"))
-     (forward-char)
-     (ensime-refactor-rename "DudeFace"))
-
-    ((:refactor-at-confirm-buffer)
-     (switch-to-buffer ensime-refactor-info-buffer-name)
-     (funcall (key-binding (kbd "c"))))
-
-    ((:refactor-done :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-assert-file-contains-string (car src-files) "class /*1*/DudeFace")
-      (ensime-assert-file-contains-string (cadr src-files) "new DudeFace()")
-
-      ;; Do a followup refactoring to make sure compiler reloaded
-      ;; all touched files after the first rename...
-      (find-file (car src-files))
-      (goto-char (point-min))
-      (search-forward "Dude" nil t)
-      (ensime-refactor-rename "Horse")))
-
-    ((:refactor-at-confirm-buffer)
-     (switch-to-buffer ensime-refactor-info-buffer-name)
-     (funcall (key-binding (kbd "c"))))
-
-    ((:refactor-done :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-assert-file-contains-string (car src-files) "class /*1*/Horse")
-      (ensime-assert-file-contains-string (cadr src-files) "new Horse()")
-
-      (ensime-assert (null (ensime-all-notes)))
-      (ensime-test-cleanup proj))))
 
    (ensime-async-test
     "Test rename diff refactoring over multiple files."

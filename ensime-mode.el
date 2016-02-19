@@ -75,21 +75,11 @@
       (define-key prefix-map (kbd "C-d q") 'ensime-db-quit)
       (define-key prefix-map (kbd "C-d l") 'ensime-db-list-locals)
 
-      (define-key prefix-map (kbd "C-r r") (if ensime-refactor-enable-beta
-                                               'ensime-refactor-diff-rename
-                                             'ensime-refactor-rename))
-      (define-key prefix-map (kbd "C-r o") (if ensime-refactor-enable-beta
-                                               'ensime-refactor-diff-organize-imports
-                                             'ensime-refactor-organize-imports))
-      (define-key prefix-map (kbd "C-r l") (if ensime-refactor-enable-beta
-                                               'ensime-refactor-diff-extract-local
-                                             'ensime-refactor-extract-local))
-      (define-key prefix-map (kbd "C-r m") (if ensime-refactor-enable-beta
-                                               'ensime-refactor-diff-extract-method
-                                             'ensime-refactor-extract-method))
-      (define-key prefix-map (kbd "C-r i") (if ensime-refactor-enable-beta
-                                               'ensime-refactor-diff-inline-local
-                                             'ensime-refactor-inline-local))
+      (define-key prefix-map (kbd "C-r r") 'ensime-refactor-diff-rename)
+      (define-key prefix-map (kbd "C-r o") 'ensime-refactor-diff-organize-imports)
+      (define-key prefix-map (kbd "C-r l") 'ensime-refactor-diff-extract-local)
+      (define-key prefix-map (kbd "C-r m") 'ensime-refactor-diff-extract-method)
+      (define-key prefix-map (kbd "C-r i") 'ensime-refactor-diff-inline-local)
       (define-key prefix-map (kbd "C-r t") 'ensime-import-type-at-point)
 
       (define-key map ensime-mode-key-prefix prefix-map)
@@ -177,22 +167,12 @@
      ["Show all errors and warnings" ensime-show-all-errors-and-warnings])
 
     ("Refactor"
-     ["Organize imports" (if ensime-refactor-enable-beta
-                             (ensime-refactor-diff-organize-imports)
-                           (ensime-refactor-organize-imports))]
+     ["Organize imports" (ensime-refactor-diff-organize-imports)]
      ["Import type at point" ensime-import-type-at-point]
-     ["Rename" (if ensime-refactor-enable-beta
-                   (ensime-refactor-diff-rename)
-                 (ensime-refactor-rename))]
-     ["Extract local val" (if ensime-refactor-enable-beta
-                              (ensime-refactor-diff-extract-local)
-                            (ensime-refactor-extract-local))]
-     ["Extract method" (if ensime-refactor-enable-beta
-                           (ensime-refactor-diff-extract-method)
-                         (ensime-refactor-extract-method))]
-     ["Inline local val" (if ensime-refactor-enable-beta
-                             (ensime-refactor-diff-inline-local)
-                           (ensime-refactor-inline-local))])
+     ["Rename" (ensime-refactor-diff-rename)]
+     ["Extract local val" (ensime-refactor-diff-extract-local)]
+     ["Extract method" (ensime-refactor-diff-extract-method)]
+     ["Inline local val" (ensime-refactor-diff-inline-local)])
 
     ("Navigation"
      ["Lookup definition" ensime-edit-definition]
