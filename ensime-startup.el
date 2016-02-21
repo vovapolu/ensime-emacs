@@ -351,20 +351,25 @@ defined."
 
 (defun ensime--retry-connect (server-proc host port-fn config cache-dir)
   "When application of port-fn yields a valid port, connect to the port at the
- given host. Otherwise, schedule ensime--retry-connect for re-execution after 6
+ given host. Otherwise, schedule ensime--retry-connect for re-execution after 5
  seconds."
   (cond (ensime--abort-connection
-	 (setq ensime--abort-connection nil)
-	 (message "Aborted"))
-	((and server-proc (eq (process-status server-proc) 'exit))
-	 (message "Failed to connect: server process exited."))
-	(t
-	 (let ((port (funcall port-fn)))
-	   (if port
-           (ensime--connect host port config)
-	     (run-at-time
-	      "6 sec" nil 'ensime-timer-call 'ensime--retry-connect
-	      server-proc host port-fn config cache-dir))))))
+         (setq ensime--abort-connection nil)
+         (message "Aborted"))
+        ((and server-proc (eq (process-status server-proc) 'exit))
+         (message "Failed to connect: server process exited."))
+        (t
+         (let ((port (funcall port-fn)))
+           (unless (and port
+                        (condition-case nil
+                            (progn
+                              (ensime--connect host port config)
+                              t)
+                          (error
+                           (not (message "failed to connect to port %s, trying again..." port)))))
+             (run-at-time
+              "5 sec" nil 'ensime-timer-call 'ensime--retry-connect
+              server-proc host port-fn config cache-dir))))))
 
 (defun ensime--connect (host port config)
   (let ((c (ensime-connect host port)))
