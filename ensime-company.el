@@ -178,6 +178,12 @@
       (delete-char (- (length name)))
       (insert to-insert))
 
+    ;; If we're modifying an existing method identifier, delete what
+    ;; was there before and don't mess with the params.
+    (-when-let (suffix (ensime-completion-suffix-at-point))
+	(delete-char (length suffix))
+	(setq skip-params t))
+
     (when (and is-callable call-info (not skip-params))
       (let* ((maybe-braces (ensime-param-section-accepts-block-p
 			    (car (last param-sections))))
