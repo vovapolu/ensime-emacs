@@ -94,6 +94,14 @@
       (if (string-match ensime--rev-id-re s)
 	  (s-reverse (match-string 1 s)) ""))))
 
+(defun ensime-completion-suffix-at-point ()
+  "Returns the suffix following point."
+  ;; A bit of a hack: Piggyback on font-lock's tokenization to
+  ;; avoid requesting completions inside comments.
+  (when (not (ensime-in-comment-p (point)))
+    (when (looking-at scala-syntax:plainid-re)
+      (match-string 1))))
+
 (defun ensime-get-completions-async
     (max-results case-sense callback)
   (ensime-rpc-async-completions-at-point max-results case-sense
