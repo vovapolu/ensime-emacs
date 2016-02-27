@@ -78,6 +78,9 @@
 (defvar ensime-db-thread-suspended-hook nil
   "Hook called whenever the debugger suspends a thread.")
 
+(defvar ensime-db-attached nil
+  "Whether the debugger was started with ensime-db-attach.")
+
 (defvar ensime-db-marker-overlays '())
 
 (defvar ensime-db-breakpoint-overlays '())
@@ -190,7 +193,9 @@
   )
 
 (defun ensime-db-handle-start (evt)
-  (message "Debug VM started. Set breakpoints and then execute ensime-db-run.")
+  (if ensime-db-attached
+      (message "Attached to target VM - program running")
+    (message "Debug VM started. Set breakpoints and then execute ensime-db-run."))
   (when (get-buffer ensime-db-output-buffer)
     (kill-buffer ensime-db-output-buffer)))
 
@@ -797,6 +802,20 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
   (ensime-db-clear-breakpoint-overlays)
   (ensime-db-clear-marker-overlays))
 
+(defun ensime--db-post-start (ret action attaching)
+  (setq ensime-db-attached attaching)
+  (if (string= (plist-get ret :status) "success")
+      (progn
+        (message (concat action "..."))
+        (add-hook 'ensime-db-thread-suspended-hook
+                  'ensime-db-update-backtraces)
+
+        (add-hook 'ensime-net-process-close-hooks
+                  'ensime-db-connection-closed))
+
+    (message (format "An error occurred during %s: %s" action
+                     (plist-get ret :details))))
+  )
 
 (defun ensime-db-start ()
   "Start a debug VM"
@@ -804,22 +823,11 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
 
   (ensime-with-conn-interactive
    conn
-   (let ((root-path (or (ensime-configured-project-root) "."))
-         (cmd-line (ensime-db-get-cmd-line)))
-
-     (let ((ret (ensime-rpc-debug-start cmd-line)))
-       (if (string= (plist-get ret :status) "success")
-           (progn
-             (message "Starting debug VM...")
-             (add-hook 'ensime-db-thread-suspended-hook
-                       'ensime-db-update-backtraces)
-
-             (add-hook 'ensime-net-process-close-hooks
-                       'ensime-db-connection-closed))
-
-         (message (format "An error occured during starting debug VM: %s"
-                          (plist-get ret :details))))
-       ))))
+   (let ((cmd-line (ensime-db-get-cmd-line)))
+     (ensime--db-post-start (ensime-rpc-debug-start cmd-line)
+                            "starting debug VM"
+                            nil)
+     )))
 
 
 (defun ensime-db-attach ()
@@ -831,22 +839,12 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
    (let ((hostname (ensime-db-get-hostname))
          (port (ensime-db-get-port)))
 
-     (let ((ret (ensime-rpc-debug-attach hostname port)))
-       (if (string= (plist-get ret :status) "success")
-           (progn
-             (message "Attaching to target VM...")
-             (add-hook 'ensime-db-thread-suspended-hook
-                       'ensime-db-update-backtraces)
-
-             (add-hook 'ensime-net-process-close-hooks
-                       'ensime-db-connection-closed))
-
-         (message "An error occured during attaching to target VM: %s"
-                  (plist-get ret :details)))))
-   ))
+     (ensime--db-post-start (ensime-rpc-debug-attach hostname port)
+                            "attaching to target VM"
+                            t)
+   )))
 
 (provide 'ensime-debug)
 
 ;; Local Variables:
 ;; End:
-
