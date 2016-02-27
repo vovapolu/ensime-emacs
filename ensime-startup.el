@@ -220,7 +220,7 @@ the ensime server will not be automatically updated."
       (when (file-exists-p classpath-file) (delete-file classpath-file))
       (make-directory (file-name-directory classpath-file) t)
       (ensime-write-to-file buildfile buildcontents)
-      (ensime-write-to-file buildpropsfile "sbt.version=0.13.9\n")
+      (ensime-write-to-file buildpropsfile "sbt.version=0.13.11\n")
 
       (if (executable-find ensime-sbt-command)
           (let ((process (start-process "*ensime-update*" (current-buffer)
