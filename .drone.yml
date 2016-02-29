@@ -8,6 +8,8 @@ build:
     - cask pkg-file ;
       cask install ;
       cask build ;
+    - cask exec ert-runner ;
+    - cask exec ecukes ;
     - test/run_emacs_tests.sh ;
       if [ -n "$UNDERCOVER" ] && [ -f "coveralls.json" ] ; then
         curl -v -include --form json_file=@coveralls.json https://coveralls.io/api/v1/jobs || true ;
