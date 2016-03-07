@@ -37,7 +37,7 @@
   "Type and package inspector key bindings.")
 
 (defalias 'ensime-print-type-at-point 'ensime-type-at-point)
-(defun ensime-type-at-point (arg)
+(defun ensime-type-at-point (&optional arg)
   "Echo the type at point to the minibuffer.
 A prefix argument will add the type to the kill ring."
   (interactive "P")
