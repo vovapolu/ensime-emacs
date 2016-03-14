@@ -75,6 +75,7 @@
       (define-key prefix-map (kbd "C-d q") 'ensime-db-quit)
       (define-key prefix-map (kbd "C-d l") 'ensime-db-list-locals)
 
+      (define-key prefix-map (kbd "C-r a") 'ensime-refactor-add-type-annotation)
       (define-key prefix-map (kbd "C-r r") 'ensime-refactor-diff-rename)
       (define-key prefix-map (kbd "C-r o") 'ensime-refactor-diff-organize-imports)
       (define-key prefix-map (kbd "C-r l") 'ensime-refactor-diff-extract-local)
@@ -167,6 +168,7 @@
      ["Show all errors and warnings" ensime-show-all-errors-and-warnings])
 
     ("Refactor"
+     ["Add type annotation" (ensime-refactor-add-type-annotation)]
      ["Organize imports" (ensime-refactor-diff-organize-imports)]
      ["Import type at point" ensime-import-type-at-point]
      ["Rename" (ensime-refactor-diff-rename)]

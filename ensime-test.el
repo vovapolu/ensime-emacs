@@ -1684,6 +1684,51 @@
 
       (ensime-test-cleanup proj))))
 
+      (ensime-async-test
+    "Test add type annotation."
+    (let* ((proj (ensime-create-tmp-project
+                  `((:name
+                     "d.scala"
+                     :contents ,(ensime-test-concat-lines
+                                 "class D {"
+                                 "  val /*2*/a = true"
+                                 "  def /*3*/b = 99"
+                                 "  def /*4*/test2() = 99"
+                                 "  def /*5*/test3(x: Int) = 99"
+                                 "  def /*6*/test4(x: Int = 99) = 99"
+                                 "  def /*7*/test5(x: Int = 99)(implicit y: Int) = y"
+                                 "}"))))))
+      (ensime-test-init-proj proj))
+
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+
+      (goto-char (ensime-test-after-label "7"))
+      (ensime-refactor-add-type-annotation)
+      (goto-char (ensime-test-after-label "6"))
+      (ensime-refactor-add-type-annotation)
+      (goto-char (ensime-test-after-label "5"))
+      (ensime-refactor-add-type-annotation)
+      (goto-char (ensime-test-after-label "4"))
+      (ensime-refactor-add-type-annotation)
+      (goto-char (ensime-test-after-label "3"))
+      (ensime-refactor-add-type-annotation)
+      (goto-char (ensime-test-after-label "2"))
+      (ensime-refactor-add-type-annotation)
+
+      (goto-char 1)
+      (ensime-assert (search-forward "a: Boolean =" nil t))
+      (ensime-assert (search-forward "b: Int =" nil t))
+      (ensime-assert (search-forward "test2(): Int =" nil t))
+      (ensime-assert (search-forward "test3(x: Int): Int =" nil t))
+      (ensime-assert (search-forward "test4(x: Int = 99): Int =" nil t))
+      (ensime-assert (search-forward "test5(x: Int = 99)(implicit y: Int): Int =" nil t))
+
+      (ensime-test-cleanup proj)
+      )))
+
    (ensime-async-test
     "Test debugging scala project."
     (let* ((proj (ensime-create-tmp-project

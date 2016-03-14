@@ -64,6 +64,13 @@
      (plist-get type :full-name)
      (ensime-type-type-args-suffix type))))
 
+(defun ensime-type-short-name-with-args (type)
+  (if (plist-get type :arrow-type)
+      (plist-get type :name)
+    (concat
+     (plist-get type :name)
+     (ensime-type-type-args-suffix type))))
+
 (defun ensime-type-type-args-suffix (type)
   (let ((args (ensime-type-type-args type)))
     (if args

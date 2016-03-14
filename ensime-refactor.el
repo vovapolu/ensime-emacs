@@ -232,6 +232,17 @@ Do not asks user about each one if `ensime-refactor-save-with-no-questions' is n
                    (equal src-buffer-name (buffer-name)))
                  src-buffer-name)))))
 
+(defun ensime-refactor-add-type-annotation ()
+  "Add type annotation to current symbol."
+  (interactive)
+  (let* ((type (ensime-rpc-get-type-at-point))
+         (shortname (ensime-type-short-name-with-args type)))
+    (save-excursion
+      (forward-word)
+      (while (let ((current-char (thing-at-point 'char)))
+               (or (equal "(" current-char) (equal "[" current-char)))
+        (forward-list))
+      (insert (concat ": " shortname)))))
 
 (provide 'ensime-refactor)
 
