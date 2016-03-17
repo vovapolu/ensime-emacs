@@ -214,11 +214,11 @@
 (ert-deftest ensime-emacs-test-inf-repl-config ()
  (let ((test-config
         '(:scala-version "test-inf-repl-config"
-                         :java-home "/x/y/jdk" :target "a" :compile-deps ("b" "c") :runtime-deps ("d" "e")
+                         :java-home "/x/y/jdk" :targets ("a") :compile-deps ("b" "c") :runtime-deps ("d" "e")
                          :java-flags ("flag1" "flag2")
                          :subprojects
-                         ((:target "f" :compile-deps ("g") :runtime-deps ("h"))
-                          (:target "i" :compile-deps ("j" "k") :runtime-deps ("l" "m"))))))
+                         ((:targets ("f") :compile-deps ("g") :runtime-deps ("h"))
+                          (:targets ("i") :compile-deps ("j" "k") :runtime-deps ("l" "m"))))))
    (unwind-protect
        (progn
          (ensime-write-to-file (ensime--classpath-file "test-inf-repl-config")
