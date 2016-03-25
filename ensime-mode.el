@@ -43,7 +43,7 @@
       (define-key prefix-map (kbd "C-t t") 'ensime-goto-test)
       (define-key prefix-map (kbd "C-t i") 'ensime-goto-impl)
 
-      (define-key prefix-map (kbd "C-d d") 'ensime-db-start)
+      (define-key prefix-map (kbd "C-d a") 'ensime-db-attach)
       (define-key prefix-map (kbd "C-d b") 'ensime-db-set-break)
       (define-key prefix-map (kbd "C-d u") 'ensime-db-clear-break)
       (define-key prefix-map (kbd "C-d s") 'ensime-db-step)
@@ -66,14 +66,6 @@
       (define-key prefix-map (kbd "C-b r") 'ensime-sbt-do-run)
       (define-key prefix-map (kbd "C-b t") 'ensime-sbt-do-test-dwim)
       (define-key prefix-map (kbd "C-b q") 'ensime-sbt-do-test-quick-dwim)
-
-      (define-key prefix-map (kbd "C-d u") 'ensime-db-clear-break)
-      (define-key prefix-map (kbd "C-d s") 'ensime-db-step)
-      (define-key prefix-map (kbd "C-d n") 'ensime-db-next)
-      (define-key prefix-map (kbd "C-d r") 'ensime-db-run)
-      (define-key prefix-map (kbd "C-d c") 'ensime-db-continue)
-      (define-key prefix-map (kbd "C-d q") 'ensime-db-quit)
-      (define-key prefix-map (kbd "C-d l") 'ensime-db-list-locals)
 
       (define-key prefix-map (kbd "C-r a") 'ensime-refactor-add-type-annotation)
       (define-key prefix-map (kbd "C-r r") 'ensime-refactor-diff-rename)
@@ -203,7 +195,7 @@
      ["Package" ensime-sbt-do-package])
 
     ("Debugger"
-     ["Start" ensime-db-start]
+     ["Attach" ensime-db-attach]
      ["Set break point" ensime-db-set-break]
      ["Clear breakpoint" ensime-db-clear-break]
      ["Clear all breakpoints" ensime-db-clear-all-breaks]

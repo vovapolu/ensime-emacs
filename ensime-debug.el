@@ -739,9 +739,7 @@
 (defun ensime-db-run ()
   "Start debugging the current program."
   (interactive)
-  (if (ensime-rpc-debug-active-vm)
-      (ensime-rpc-debug-run)
-    (ensime-db-start)))
+  (ensime-rpc-debug-run))
 
 (defun ensime-db-set-break (f line)
   "Set a breakpoint in the current source file at point."
@@ -817,27 +815,16 @@ the current project's dependencies. Returns list of form (cmd [arg]*)"
                      (plist-get ret :details))))
   )
 
-(defun ensime-db-start ()
-  "Start a debug VM"
-  (interactive)
-
-  (ensime-with-conn-interactive
-   conn
-   (let ((cmd-line (ensime-db-get-cmd-line)))
-     (ensime--db-post-start (ensime-rpc-debug-start cmd-line)
-                            "starting debug VM"
-                            nil)
-     )))
-
-
-(defun ensime-db-attach ()
+(defun ensime-db-attach (&optional override-host override-port)
   "Attach to a debug VM"
   (interactive)
+  ;; would be better to use the interactive parser for host/port
+  ;; instead of this hack of calling out to separate functions
 
   (ensime-with-conn-interactive
    conn
-   (let ((hostname (ensime-db-get-hostname))
-         (port (ensime-db-get-port)))
+   (let ((hostname (or override-host (ensime-db-get-hostname)))
+         (port (or override-port (ensime-db-get-port))))
 
      (ensime--db-post-start (ensime-rpc-debug-attach hostname port)
                             "attaching to target VM"

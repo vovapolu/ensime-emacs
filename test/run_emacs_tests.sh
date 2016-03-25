@@ -12,7 +12,7 @@
 cd "`dirname $0`/../"
 
 if [ -z "$SCALA_VERSION" ] ; then
-    export SCALA_VERSION=2.11.7
+    export SCALA_VERSION=2.11.8
 fi
 
 if [ -z "$EMACS" ] ; then
@@ -30,6 +30,7 @@ if [ -z "$JDK_HOME" ] ; then
     fi
 fi
 export JAVA_HOME="$JDK_HOME/jre"
+export PATH=$JDK_HOME/bin:$PATH
 
 if [ $# -ge 1 ]; then
   exec "$EMACS" --no-site-file --no-init-file --load test/dotemacs_test.el --eval "(ensime-run-one-test \"${*}\")"

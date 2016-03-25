@@ -898,10 +898,6 @@ copies. All other objects are used unchanged. List must not contain cycles."
   (ensime-eval
    `(swank:debug-set-value ,location ,new-val)))
 
-(defun ensime-rpc-debug-start (command-line)
-  (ensime-eval
-   `(swank:debug-start ,command-line)))
-
 (defun ensime-rpc-debug-attach (hostname port)
   (ensime-eval
    `(swank:debug-attach ,hostname ,port)))
