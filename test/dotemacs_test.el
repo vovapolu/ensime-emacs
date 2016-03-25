@@ -1,7 +1,7 @@
 (setq debug-on-error t
       debug-on-quit t
-      ensime-log-events nil ;; change to `t' to debug
-      ensime--debug-messages nil ;; change to `interactive' to debug
+      ensime-log-events nil ;; change to `t' for debug info
+      ensime--debug-messages nil ;; change to `t' for debug info
       ensime-typecheck-when-idle nil
       user-emacs-directory (expand-file-name
                             (concat ".cask/" emacs-version)))

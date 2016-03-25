@@ -123,8 +123,8 @@
 						   :source-roots (,src-dir ,unit-test-dir ,int-test-dir)
 						   :depends-on-modules nil
 						   :compile-deps (,scala-jar)
-						   :target ,target-dir
-						   :test-target ,test-target-dir)))))
+						   :targets (,target-dir)
+						   :test-targets (,test-target-dir))))))
          (conf-file (ensime-create-file
                      (expand-file-name ".ensime" root-dir)
                      (format "%S" config))))
@@ -164,7 +164,7 @@
        :cache-dir cache-dir
        :conf-file conf-file
        :src-dir src-dir
-       :target target-dir
+       :targets `(,target-dir)
        :config config))))
 
 (defvar ensime-tmp-project-hello-world
@@ -187,7 +187,7 @@
   "Compile java sources of given temporary test project."
   (let* ((root (plist-get proj :root-dir))
          (src-files (plist-get proj :src-files))
-         (target (plist-get proj :target))
+         (target (car (plist-get proj :targets)))
          (args (append
                 arguments
                 (list "-d" target)
@@ -1729,78 +1729,88 @@
       (ensime-test-cleanup proj)
       )))
 
-   (ensime-async-test
-    "Test debugging scala project."
-    (let* ((proj (ensime-create-tmp-project
-                  `((:name
-                     "test/Test.scala"
-                     :contents ,(ensime-test-concat-lines
-				 "package test"
-                                 "object Test {"
-                                 "  def main(args: Array[String]) {"
-                                 "    val a = \"cat\""
-                                 "    val b = \"dog\""
-                                 "    val c = \"bird\""
-                                 "    println(a + b + c)"
-                                 "  }"
-                                 "}")))))
-           (src-files (plist-get proj :src-files)))
-      (ensime-create-file
-       (expand-file-name "build.sbt" (plist-get proj :root-dir))
-       (ensime-test-concat-lines
-	"import sbt._"
-	""
-	"name := \"test\""
-	""
-	"scalacOptions += \"-g:notailcalls\""
-	""
-	(concat "scalaVersion := \"" ensime--test-scala-version "\"")
-	))
-      (assert ensime-sbt-command)
-      (let ((default-directory (file-name-as-directory (plist-get proj :root-dir))))
-	(assert (= 0 (apply 'call-process ensime-sbt-command nil
-			    "*sbt-test-compilation*" nil '("compile")))))
-      (assert (directory-files (concat (plist-get proj :target) "/test") nil "class$"))
-      (ensime-test-init-proj proj))
+      (ensime-async-test
+       "Test debugging scala project."
+       ;; these test projects should really just be explicitly defined in the repo
+       (let* ((proj (ensime-create-tmp-project
+                     `((:name
+                        "test/Test.scala"
+                        :contents ,(ensime-test-concat-lines
+                                    "package test"
+                                    "object Test {"
+                                    "  def main(args: Array[String]) {"
+                                    "    val a = \"cat\""
+                                    "    val b = \"dog\""
+                                    "    val c = \"bird\""
+                                    "    println(a + b + c)"
+                                    "  }"
+                                    "}")))))
+              (target    (car (plist-get proj :targets)))
+              (src-files (plist-get proj :src-files)))
+         (ensime-create-file
+          (expand-file-name "build.sbt" (plist-get proj :root-dir))
+          (ensime-test-concat-lines
+           "import sbt._"
+           ""
+           "name := \"test\""
+           ""
+           "scalacOptions += \"-g:notailcalls\""
+           ""
+           (concat "scalaVersion := \"" ensime--test-scala-version "\"")
+           ))
+         (assert ensime-sbt-command)
+         (let ((default-directory (file-name-as-directory (plist-get proj :root-dir))))
+           (assert (= 0 (apply 'call-process ensime-sbt-command nil
+                               "*sbt-test-compilation*" nil '("compile")))))
+         (assert (directory-files (concat target "/test") nil "class$"))
+         (ensime-test-init-proj proj))
 
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-rpc-debug-set-break buffer-file-name 7)
-      (ensime-rpc-debug-start "test.Test")))
+       ((:connected))
+       ((:compiler-ready :full-typecheck-finished)
+        (ensime-test-with-proj
+         (proj src-files)
+         (ensime-rpc-debug-set-break buffer-file-name 7)
+         ;; we could also use the ensime-sbt debugging launcher here
+         (start-process
+          "debugging"
+          "*debugging*"
+          "java"
+          "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
+          "-classpath" (car (plist-get proj :targets))
+          "test.Test")
+         (sleep-for 5) ;; yeah yeah, I know...
+         (ensime-db-attach "127.0.0.1" "5005")))
 
-    (:debug-event evt (equal (plist-get evt :type) 'start))
+       ;; this doesn't always arrive
+       ;;(:debug-event evt (equal (plist-get evt :type) 'threadStart))
 
-    (:debug-event evt (equal (plist-get evt :type) 'threadStart))
-
-    (:debug-event evt (equal (plist-get evt :type) 'breakpoint)
-		  (ensime-test-with-proj
-		   (proj src-files)
-      (let* ((thread-id (plist-get evt :thread-id))
-	     (trace (ensime-rpc-debug-backtrace thread-id 0 -1))
-             (pc-file (file-truename (car src-files))))
-        (when (eql system-type 'windows-nt)
-          (aset pc-file 0 (upcase (aref pc-file 0)))
-          (setq pc-file (replace-regexp-in-string "/" "\\\\" pc-file)))
-	(ensime-assert trace)
-	(let* ((frame-zero (nth 0 (plist-get trace :frames)))
-	       ;; Remove incidentals...
-	       (frame (plist-put frame-zero :this-object-id "NA")))
-	  (ensime-assert-equal
-	   frame
-	   `(:index 0 :locals
-		   ((:index 0 :name "args" :summary "Array[]" :type-name "java.lang.String[]")
-		    (:index 1 :name "a" :summary "\"cat\"" :type-name "java.lang.String")
-		    (:index 2 :name "b" :summary "\"dog\"" :type-name "java.lang.String")
-		    (:index 3 :name "c" :summary "\"bird\"" :type-name "java.lang.String"))
-		   :num-args 1
-		   :class-name "test.Test$"
-		   :method-name "main"
-		   :pc-location (:file ,pc-file :line 7)
-		   :this-object-id "NA"))))
-      (ensime-rpc-debug-stop)
-      (ensime-test-cleanup proj))))
+       (:debug-event evt (equal (plist-get evt :type) 'breakpoint)
+                     (ensime-test-with-proj
+                      (proj src-files)
+                      (let* ((thread-id (plist-get evt :thread-id))
+                             (trace (ensime-rpc-debug-backtrace thread-id 0 -1))
+                             (pc-file (file-truename (car src-files))))
+                        (when (eql system-type 'windows-nt)
+                          (aset pc-file 0 (upcase (aref pc-file 0)))
+                          (setq pc-file (replace-regexp-in-string "/" "\\\\" pc-file)))
+                        (ensime-assert trace)
+                        (let* ((frame-zero (nth 0 (plist-get trace :frames)))
+                               ;; Remove incidentals...
+                               (frame (plist-put frame-zero :this-object-id "NA")))
+                          (ensime-assert-equal
+                           frame
+                           `(:index 0 :locals
+                                    ((:index 0 :name "args" :summary "Array[]" :type-name "java.lang.String[]")
+                                     (:index 1 :name "a" :summary "\"cat\"" :type-name "java.lang.String")
+                                     (:index 2 :name "b" :summary "\"dog\"" :type-name "java.lang.String")
+                                     (:index 3 :name "c" :summary "\"bird\"" :type-name "java.lang.String"))
+                                    :num-args 1
+                                    :class-name "test.Test$"
+                                    :method-name "main"
+                                    :pc-location (:file ,pc-file :line 7)
+                                    :this-object-id "NA"))))
+                      (ensime-rpc-debug-stop)
+                      (ensime-test-cleanup proj))))
 
    (ensime-async-test
     "REPL without server."
@@ -1966,10 +1976,11 @@ Must run the run-all script first to update the server."
   (interactive "sEnter a regex matching a test's title: ")
   (catch 'done
     (setq ensime--test-had-failures nil)
-    (let ((title (plist-get ensime-slow-suite :title)))
-      (when (integerp (string-match key title))
-        (ensime-run-suite (list test))
-        (throw 'done nil)))))
+    (dolist (test ensime-slow-suite)
+      (let ((title (plist-get test :title)))
+        (when (integerp (string-match key title))
+          (ensime-run-suite (list test))
+          (throw 'done nil))))))
 
 (provide 'ensime-test)
 
