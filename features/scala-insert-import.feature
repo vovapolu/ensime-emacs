@@ -132,6 +132,32 @@ Feature: Insert Scala Import
     }
     """
 
+  Scenario: Insert in File without package
+    When I open temp scala file "test"
+    And I insert:
+    """
+    import scala.concurrent.duration._
+    class A(value:String){
+      def hello(){
+        new ListBuffer()
+      }
+    }
+    """
+
+    And I go to line "4"
+    And I go to end of line
+    And I insert import "org.scala.collections.mutable.ListBuffer"
+
+    Then I should see:
+    """
+    import scala.concurrent.duration._
+    import org.scala.collections.mutable.ListBuffer
+    class A(value:String){
+      def hello(){
+        new ListBuffer()
+      }
+    }
+    """
   Scenario: Insert Import Groups Import Under The Same Package Even When Already Grouped
     When I open temp scala file "test"
     And I insert:
