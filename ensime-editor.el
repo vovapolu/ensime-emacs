@@ -558,6 +558,7 @@ JAVA-SCALA-NEW-IMPORT is a function to format the import statement for either ja
 QUALIFIED-NAME is the name to import.
 Returns a function/closure to invoke the necessary buffer operations to perform the insertion."
   (lambda ()
+    (goto-char (point-at-eol))
     (if (equal (point) (point-max)) (newline) (forward-char 1))
     (ensime-past-starting-point starting-point)
     (save-excursion (insert (funcall java-scala-new-import qualified-name)))
