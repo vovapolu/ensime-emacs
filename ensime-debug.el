@@ -185,7 +185,7 @@
 
   (-when-let (exc-val (ensime-rpc-debug-value
                        (ensime-db-make-obj-ref-location
-                        (plist-get evt :exception))))
+                        (number-to-string (plist-get evt :exception)))))
     (ensime-ui-show-nav-buffer
      ensime-db-value-buffer
      exc-val t))

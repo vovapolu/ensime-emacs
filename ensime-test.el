@@ -1778,7 +1778,7 @@
           "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"
           "-classpath" (car (plist-get proj :targets))
           "test.Test")
-         (sleep-for 5) ;; yeah yeah, I know...
+         (sleep-for 10) ;; yeah yeah, I know...
          (ensime-db-attach "127.0.0.1" "5005")))
 
        ;; this doesn't always arrive
