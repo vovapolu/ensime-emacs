@@ -160,7 +160,8 @@
 (defun ensime-refactor-diff-preview-popup (diff)
   (ensime-with-popup-buffer (ensime-refactor-info-buffer-name
                              nil t 'diff-mode)
-                            (insert-file-contents diff)))
+                            (insert-file-contents diff)
+                            (ensime-refactor-diff-buffer-local-key)))
 
 (defun ensime-refactor-diff-preview-apply-popup (diff)
   (ensime-with-popup-buffer (ensime-refactor-info-buffer-name
@@ -243,6 +244,15 @@ Do not asks user about each one if `ensime-refactor-save-with-no-questions' is n
                (or (equal "(" current-char) (equal "[" current-char)))
         (forward-list))
       (insert (concat ": " shortname)))))
+
+(defun ensime-refactor-diff-buffer-local-key ()
+  "Define a buffer local key in a copy of `diff-mode-map'"
+  (use-local-map (copy-keymap diff-mode-map))
+  (local-set-key (kbd "a")
+                 (lambda ()
+                   (interactive)
+                   (ensime-refactor-diff-apply-hunks)
+                   (ensime-refactor-diff-save-source-files))))
 
 (provide 'ensime-refactor)
 
