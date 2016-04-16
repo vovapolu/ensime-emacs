@@ -36,6 +36,7 @@ import IO._
 import java.io._
 
 scalaVersion := \"_scala_version_\"
+scalaBinaryVersion := \"_scala_binary_version_\"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
@@ -308,7 +309,7 @@ CACHE-DIR is the server's persistent output directory."
 
 (defun ensime--scala-binary-version (full-version)
   "The scala binary version given a full version string."
-  (pcase (version-to-list full-version)
+  (pcase (version-to-list (car (s-split "-" full-version)))
     (`(2 10 ,_) "2.10")
     (`(2 11 ,_) "2.11")
     (t (error "unsupported scala version %s" full-version))))
@@ -317,6 +318,7 @@ CACHE-DIR is the server's persistent output directory."
   ;; emacs has some weird case-preservation rules in regexp replace
   ;; see http://github.com/magnars/s.el/issues/62
   (s-replace-all (list (cons "_scala_version_" scala-version)
+                       (cons "_scala_binary_version_" (ensime--scala-binary-version scala-version))
                        (cons "_server_version_" ensime-server-version)
                        (cons "_classpath_file_" (ensime--classpath-file scala-version)))
                  ensime--sbt-start-template))
