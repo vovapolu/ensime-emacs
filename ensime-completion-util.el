@@ -24,6 +24,7 @@
   (require 'ensime-macros))
 
 (require 'scala-mode-syntax)
+(require 'dash)
 
 ;; In order to efficiently and accurately match completion prefixes, we construct
 ;; a regular expression which matches scala identifiers in reverse.
@@ -62,20 +63,16 @@
   "Maps plist structures to propertized strings that will survive
  being passed through the innards of auto-complete or company."
   (mapcar
-   (lambda (m)
-     (let* ((type-sig (plist-get m :type-sig))
-	    (type-id (plist-get m :type-id))
-	    (is-callable (plist-get m :is-callable))
-	    (to-insert (plist-get m :to-insert))
-	    (name (plist-get m :name))
-	    (candidate name))
-       (propertize candidate
-		   'symbol-name name
-		   'type-sig type-sig
-		   'type-id type-id
-		   'is-callable is-callable
-		   'to-insert to-insert
-		   ))) completions))
+   (lambda (completion)
+     (ensime-plist-bind
+      (type-info is-callable to-insert name)
+      completion
+      (propertize name
+                  'symbol-name name
+                  'type-info type-info
+                  'is-callable is-callable
+                  'to-insert to-insert)))
+   completions))
 
 
 (defun ensime-completion-prefix-at-point ()
@@ -131,26 +128,6 @@
 	(when (and (= (length candidates) 1)
 		   (string= prefix (car candidates)))
 	  (car candidates))))))
-
-(defun ensime-call-completion-info (candidate)
-  "Returns a legacy call-completion-info structure for the given
- completion-signature."
-  (let* ((type-sig (get-text-property 0 'type-sig candidate))
-	 (sections (nth 0 type-sig))
-	 (return-type (nth 1 type-sig))
-	 (has-implicit (nth 2 type-sig)))
-    `(:param-sections
-      ,(mapcar
-	(lambda (section)
-	  (list :params
-		(mapcar
-		 (lambda (p)
-		   (let* ((name (nth 0 p))
-                  ;; FIXME do we really need to do this client side?
-			  (tpe (ensime-parse-type-info-from-scala-name (nth 1 p))))
-		     (list name tpe))) section)
-		:is-implicit (and has-implicit (equal (car (last sections)) section)))
-	  ) sections))))
 
 (provide 'ensime-completion-util)
 
