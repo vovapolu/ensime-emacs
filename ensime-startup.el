@@ -119,8 +119,7 @@ saveClasspathTask := {
             (ensime--maybe-start-server
              (generate-new-buffer-name (concat "*" buffer "*"))
              server-java scala-version server-flags
-             (list* (concat "JDK_HOME=" server-java)
-                    (concat "JAVA_HOME=" server-java)
+             (list* (concat "JAVA_HOME=" server-java)
                     server-env)
              config-file
              cache-dir))
@@ -214,9 +213,9 @@ the ensime server will not be automatically updated."
     (let* ((default-directory (file-name-as-directory
                                (make-temp-file "ensime_update_" t)))
            (classpath-file (ensime--classpath-file scala-version))
-           (buildfile (concat default-directory "build.sbt"))
+           (buildfile (expand-file-name "build.sbt"))
            (buildcontents (ensime--create-sbt-start-script scala-version))
-           (buildpropsfile (concat default-directory "project/build.properties")))
+           (buildpropsfile (expand-file-name "project/build.properties")))
 
       (when (file-exists-p classpath-file) (delete-file classpath-file))
       (make-directory (file-name-directory classpath-file) t)
@@ -254,7 +253,7 @@ CACHE-DIR is the server's persistent output directory."
   (with-current-buffer (get-buffer-create buffer)
     (comint-mode)
     (let* ((default-directory cache-dir)
-           (tools-jar (concat java-home "lib/tools.jar"))
+           (tools-jar (expand-file-name "lib/tools.jar" java-home))
            (assembly-file (ensime--assembly-file scala-version))
            (classpath-file (ensime--classpath-file scala-version))
            (scala-compiler-jars (plist-get config :scala-compiler-jars))
@@ -266,7 +265,7 @@ CACHE-DIR is the server's persistent output directory."
            (classpath (s-join ensime--classpath-separator
                               (append server-classpath (list tools-jar))))
            (process-environment (append user-env process-environment))
-           (java-command (concat java-home "bin/java"))
+           (java-command (expand-file-name "bin/java" java-home))
            (args (-flatten (list
                             "-classpath" classpath
                             flags

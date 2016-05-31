@@ -66,7 +66,7 @@
 (autoload 'ensime-company-enable "ensime-company")
 (autoload 'ensime-ac-enable "ensime-auto-complete")
 
-(defvar ensime-protocol-version "0.7")
+(defvar ensime-protocol-version "0.8.21")
 
 (defvar ensime-prefer-noninteractive nil
   "State variable used for regression testing, and for skipping prompt in conjunction with sbt.")
@@ -88,7 +88,7 @@
           (ensime--maybe-update-and-start orig-bfn))
       ('error (error (format
                       "check that sbt is on your PATH and see the Troubleshooting Guide for further steps %s [%s]"
-                      "http://ensime.github.io/editors/emacs/troubleshooting/" ex))))))
+                      "http://ensime.org/editors/emacs/troubleshooting/" ex))))))
 
 ;;;###autoload
 (defun ensime-remote (host port)
