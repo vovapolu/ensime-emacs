@@ -77,7 +77,8 @@ be used later to give contextual help when entering arguments."
   (let* (;; When called by auto-complete-mode, grab from dynamic environment.
 	 (candidate (or candidate-in candidate))
 	 (name candidate)
-	 (is-callable (get-text-property 0 'is-callable candidate))
+     (type-info (get-text-property 0 'type-info candidate))
+     (is-callable (plist-get type-info :arrow-type))
 	 (to-insert (get-text-property 0 'to-insert candidate))
 	 (name-start-point (- (point) (length name))))
 
@@ -266,8 +267,10 @@ be used later to give contextual help when entering arguments."
            (end (point))
            (props '(:annotation-function
                     (lambda (m)
-                      (when (get-text-property 0 'is-callable m)
-                        (plist-get (get-text-property 0 'type-info m) :full-name)))
+                      (let* ((type-info (get-text-property 0 'type-info m))
+                             (is-callable (plist-get type-info :arrow-type)))
+                        (when is-callable
+                          (plist-get (get-text-property 0 'type-info m) :full-name))))
                     :exit-function
                     (lambda (m status)
                       (when (eq status 'finished)
