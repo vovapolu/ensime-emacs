@@ -14,7 +14,7 @@
   "Interaction with the ENhanced Scala Environment UI."
   :group 'ensime)
 
-(defcustom ensime-default-buffer-prefix "inferior-ensime-server-"
+(defcustom ensime-default-buffer-prefix "ENSIME-"
   "The prefix of the buffer that the ENSIME server process runs in."
   :type 'string
   :group 'ensime-ui)
@@ -163,11 +163,11 @@ used it must be installed separately."
 
 (defcustom ensime-goto-test-config-defaults
   '(:test-class-names-fn ensime-goto-test--test-class-names
-    :test-class-suffixes ("Test" "Spec" "Specification" "Check")
+    :test-class-suffixes ("Spec" "Test" "Check" "Specification")
     :impl-class-name-fn  ensime-goto-test--impl-class-name
     :impl-to-test-dir-fn ensime-goto-test--impl-to-test-dir
     :is-test-dir-fn      ensime-goto-test--is-test-dir
-    :test-template-fn    ensime-goto-test--test-template-default)
+    :test-template-fn    ensime-goto-test--test-template-scalatest-flatspec)
 
   "Configures the default behavior of the \"go to test/implementation\"
 feature. Behavior can also be defined on a per-project basis. See
@@ -245,7 +245,7 @@ linum, etc..)"
   :type 'boolean
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-preview nil
+(defcustom ensime-refactor-preview t
   "Enable or disable a refactor preview feature.
 Non-nil means Ensime will show a preview of the changes in the
 *ENSIME-Refactoring* buffer. Diff hunks can be applied manually
@@ -268,9 +268,9 @@ less of equal to the value."
   :type 'number
   :group 'ensime-ui)
 
-(defcustom ensime-refactor-preview-override-hunk 0
+(defcustom ensime-refactor-preview-override-hunk 10
   "The overriding criterion for a non-nil `ensime-refactor-preview'.
-Automatically apply hunks when the number of hunks is less of
+Automatically apply hunks when the number of hunks is less or
 equal to the value."
   :type 'number
   :group 'ensime-ui)
