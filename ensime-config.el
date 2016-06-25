@@ -147,10 +147,7 @@ NO-REF-SOURCES allows skipping the extracted dependencies."
         file
       (warn (concat
               "Could not find an ENSIME project file. "
-              "Please see the ENSIME guide: "
-              "https://github.com/ensime/ensime-server/wiki/Quick-Start-Guide "
-              "for instructions on how to write or "
-              "generate a config file."))
+              "See http://ensime.org/build_tools"))
       nil)))
 
 (defun ensime-config-load (file-name &optional force-dir)
