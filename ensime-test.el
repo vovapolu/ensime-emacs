@@ -219,10 +219,11 @@
         (delete-directory root-dir t)))))
 
 (defun ensime-kill-all-ensime-servers ()
-  "Kill all inferior ensime server buffers."
-  (dolist (b (buffer-list))
-    (when (string-match "^\\*inferior-ensime-server.*" (buffer-name b))
-      (kill-buffer b))))
+  "Kill all ensime server buffers."
+  (let ((case-fold-search nil))
+    (dolist (b (buffer-list))
+      (when (string-match (concat "^\\*" ensime-default-buffer-prefix ".*") (buffer-name b))
+        (kill-buffer b)))))
 
 (defmacro ensime-test-var-put (var val)
   "Helper for writing to shared testing state."

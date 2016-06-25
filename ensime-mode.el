@@ -4,6 +4,8 @@
   (require 'cl)
   (require 'ensime-macros))
 
+(require 's)
+
 (defvar ensime-source-buffer-saved-hook nil
   "Hook called whenever an ensime source buffer is saved.")
 
@@ -428,45 +430,24 @@
              '(ensime-mode (:eval (ensime-modeline-string))))
 
 (defun ensime-modeline-string ()
-  "Return the string to display in the modeline.
-  \"ENSIME\" only appears if we aren't connected.  If connected, include
-  connection-name, and possibly some state
-  information."
+  "The string to display in the modeline.
+\"ENSIME\" only appears if we aren't connected. If connected,
+include connection-name, and possibly some state information."
   (when ensime-mode
-    (condition-case err
-	(let ((conn (ensime-connection-or-nil)))
-	  (cond ((and ensime-mode (not conn))
-		 (cond
-		  ((ensime-owning-server-process-for-source-file buffer-file-name)
-		   " [ENSIME: (Starting)]")
-		  (t " [ENSIME: (Disconnected)]")))
-
-		((and ensime-mode (ensime-connected-p conn))
-		 (concat " ["
-			 (or (plist-get (ensime-config conn) :name)
-			     "ENSIME: (Connected)")
-			 (let ((status (ensime-modeline-state-string conn))
-			       (unready (not (ensime-analyzer-ready conn))))
-			   (cond (status (concat " (" status ")"))
-				 (unready " (Analyzing)")
-				 (t "")))
-			 (concat (format " : %s/%s"
-					 (ensime-num-errors conn)
-					 (ensime-num-warnings conn)))
-			 "]"))
-		(ensime-mode " [ENSIME: (Dead Connection)]")
-		))
-      (error (progn
-	       " [ENSIME: wtf]"
-	       )))))
-
-(defun ensime-modeline-state-string (conn)
-  "Return a string possibly describing CONN's state."
-  (cond ((not (eq (process-status conn) 'open))
-	 (format "%s" (process-status conn)))
-	((let ((pending (length (ensime-rex-continuations conn))))
-	   (cond ((zerop pending) nil)
-		 (t (format "%s" pending)))))))
+    (s-wrap
+     (condition-case err
+         (let ((conn (ensime-connection-or-nil)))
+           (cond ((not conn)
+                  (if (ensime-owning-server-process-for-source-file buffer-file-name)
+                      "ENSIME: Starting"
+                    "ENSIME: Disconnected"))
+                 ((ensime-connected-p conn)
+                  (let ((config (ensime-config conn)))
+                    (or (plist-get config :name)
+                        "ENSIME: unknown project")))
+                 (t "ENSIME: Dead Connection")))
+       (error "ENSIME: Error"))
+     "[" "]")))
 
 (provide 'ensime-mode)
 

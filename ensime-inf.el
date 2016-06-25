@@ -58,7 +58,7 @@
 (require 'comint)
 
 (defgroup ensime-inf nil
-  "Support for running scala as an inferior process."
+  "Support for running the Scala REPL as an inferior process."
   :group 'ensime
   :prefix "ensime-inf-")
 
@@ -73,7 +73,7 @@ with data loaded from server."
   :group 'ensime-inf
   :type 'boolean)
 
-(defconst ensime-inf-buffer-name "*ensime-inferior-scala*")
+(defconst ensime-inf-buffer-name "*Scala REPL*")
 
 (defvar ensime-inf-prev-l/c-dir/file nil
   "Caches the last (directory . file) pair.
@@ -81,9 +81,8 @@ Caches the last pair used in the last ensime-inf-load-file.
 Used for determining the default in the next one.")
 
 
-(define-derived-mode ensime-inf-mode comint-mode "ENSIME Inferior Scala"
-  "Major mode for interacting with a Scala interpreter.
-  \\{inferior-scala-mode-map\\}"
+(define-derived-mode ensime-inf-mode comint-mode "Scala REPL"
+  "Major mode for interacting with a Scala interpreter."
   (define-key ensime-inf-mode-map [(meta return)] 'comint-accumulate)
   (define-key ensime-inf-mode-map (kbd "TAB") 'ensime-inf-send-tab)
 
@@ -130,7 +129,7 @@ Used for determining the default in the next one.")
     (cd root-path)
     (ensime-assert-executable-on-path (car cmd-and-args))
     (comint-exec (current-buffer)
-		 "ensime-inferior-scala"
+         ensime-inf-buffer-name
 		 (car cmd-and-args)
 		 nil
 		 (cdr cmd-and-args))

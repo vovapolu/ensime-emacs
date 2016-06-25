@@ -274,6 +274,12 @@
                                                                                                  :full-name "scala.Int"))))))))))))
   )
 
+(ert-deftest ensime-flatten-structure-view--incomplete ()
+  (should (not
+           (ensime-flatten-structure-view
+            '(:keyword "def" :name "log" :position (:type empty))
+            nil "MyThing"))))
+
 (require 'ensime-company)
 (ert-deftest ensime--build-yasnippet-for-call-test ()
   (setq ensime-test-data

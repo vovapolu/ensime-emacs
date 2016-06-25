@@ -68,7 +68,7 @@
 
 (defvar ensime-protocol-version "1.0")
 
-(defvar ensime-prefer-noninteractive nil
+(defvar ensime-prefer-noninteractive t
   "State variable used for regression testing, and for skipping prompt in conjunction with sbt.")
 
 (defvar ensime-popup-in-other-frame nil)

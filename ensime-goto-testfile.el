@@ -247,19 +247,6 @@ implementation class."
      (string-match-p "src/fun/scala/$" dir)
      (string-match-p "/tests?/$" dir))))
 
-(defun ensime-goto-test--test-template-default ()
-  ""
-  "package %TESTPACKAGE%
-
-/*
-   This is a stub test class. To learn how to customize it,
-see the documentation for `ensime-goto-test-configs'
-*/
-
-class %TESTCLASS% {
-}
-")
-
 (defun ensime-goto-test--test-template-scalatest-2 ()
   ""
   "package %TESTPACKAGE%

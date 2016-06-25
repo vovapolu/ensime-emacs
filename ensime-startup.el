@@ -5,6 +5,7 @@
   (require 'ensime-macros))
 
 (require 'dash)
+(require 's)
 
 (defvar ensime-idle-typecheck-timer nil
   "Timer called when emacs is idle")
@@ -42,12 +43,6 @@ ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 // allows local builds of scala
 resolvers += Resolver.mavenLocal
-
-// WORKAROUND https://github.com/ensime/ensime-emacs/issues/327
-// resolvers += \"NetBeans\" at \"http://bits.netbeans.org/nexus/content/groups/netbeans\"
-
-// we need jcenter for Netbeans jars
-fullResolvers += Resolver.jcenterRepo
 
 // this is where the ensime-server snapshots are hosted
 resolvers += Resolver.sonatypeRepo(\"snapshots\")
@@ -190,12 +185,13 @@ the ensime server will not be automatically updated."
    (ensime--user-directory)))
 
 (defun ensime--classfile-needs-refresh-p (classfile)
-  (let ((ensime-el (locate-file "ensime" load-path '(".el" ".elc"))))
-    (if ensime-el
+  "Do we need to update the CLASSFILE?"
+  (when (s-contains? "SNAPSHOT" ensime-server-version)
+    (let ((ensime-el (locate-file "ensime" load-path '(".el" ".elc"))))
+      (when ensime-el
         (ensime--dependencies-newer-than-target-p
          classfile
-         (directory-files (file-name-directory ensime-el) t "^ensime.*\\.elc?$"))
-      nil)))
+         (directory-files (file-name-directory ensime-el) t "^ensime.*\\.elc?$"))))))
 
 (defun ensime--update-sentinel (process event scala-version on-success-fn)
   (cond
