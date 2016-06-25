@@ -43,12 +43,6 @@ ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 // allows local builds of scala
 resolvers += Resolver.mavenLocal
 
-// WORKAROUND https://github.com/ensime/ensime-emacs/issues/327
-// resolvers += \"NetBeans\" at \"http://bits.netbeans.org/nexus/content/groups/netbeans\"
-
-// we need jcenter for Netbeans jars
-fullResolvers += Resolver.jcenterRepo
-
 // this is where the ensime-server snapshots are hosted
 resolvers += Resolver.sonatypeRepo(\"snapshots\")
 
