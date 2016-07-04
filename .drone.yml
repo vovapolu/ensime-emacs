@@ -1,5 +1,5 @@
 build:
-  image: ensime/ensime:v1.x-cache
+  image: ensime/ensime:v2.x-cache
   pull: true
   commands:
     - git log | head -n 20 ;
@@ -17,4 +17,3 @@ build:
 matrix:
   EMACS:
     - /opt/emacs-24.5/bin/emacs
-    - /opt/emacs-24.3/bin/emacs
