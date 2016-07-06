@@ -1,6 +1,8 @@
 build:
   image: ensime/ensime:v2.x-cache
   pull: true
+  environment:
+    - JVM_OPTS=-XX:MaxPermSize=256m -Xss2m -Xms500m -Xmx500m
   commands:
     - git log | head -n 20 ;
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
