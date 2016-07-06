@@ -13,7 +13,3 @@ build:
       if [ -n "$UNDERCOVER" ] && [ -f "coveralls.json" ] ; then
         curl -v -include --form json_file=@coveralls.json https://coveralls.io/api/v1/jobs || true ;
       fi
-
-matrix:
-  EMACS:
-    - /opt/emacs-24.5/bin/emacs
