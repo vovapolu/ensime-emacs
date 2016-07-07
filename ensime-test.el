@@ -1338,37 +1338,37 @@
          (ensime-externalize-offset (ensime-test-after-label "2"))))
       (ensime-test-cleanup proj))))
 
-   ;; (ensime-async-test
-   ;;  "Test interactive search."
-   ;;  (let* ((proj (ensime-create-tmp-project
-   ;;                ensime-tmp-project-hello-world)))
-   ;;    (ensime-test-init-proj proj))
+   (ensime-async-test
+    "Test interactive search."
+    (let* ((proj (ensime-create-tmp-project
+                  ensime-tmp-project-hello-world)))
+      (ensime-test-init-proj proj))
 
-   ;;  ((:connected))
-   ;;  ((:compiler-ready :full-typecheck-finished :indexer-ready)
-   ;;   (ensime-test-with-proj
-   ;;    (proj src-files)
-   ;;    ;; Prevent a previous search from affecting this test
-   ;;    (setq ensime-search-text "")
-   ;;    (ensime-search)
-   ;;    (insert "scala.collection.immutable.Vector")))
+    ((:connected))
+    ((:compiler-ready :full-typecheck-finished :indexer-ready)
+     (ensime-test-with-proj
+      (proj src-files)
+      ;; Prevent a previous search from affecting this test
+      (setq ensime-search-text "")
+      (ensime-search)
+      (insert (propertize "scala.collection.immutable.Vector" 'face 'italic))))
 
-   ;;  ((:search-buffer-populated)
-   ;;   (ensime-test-with-proj
-   ;;    (proj src-files)
+    ((:search-buffer-populated)
+     (ensime-test-with-proj
+      (proj src-files)
 
-   ;;    (with-current-buffer ensime-search-target-buffer-name
-   ;;      ;; uncomment to see the results (e.g. if they change due to server improvements)
-   ;;      ;;(message "%s" (buffer-string))
-   ;;      (goto-char 1)
-   ;;      (ensime-assert (search-forward-regexp "scala.collection.immutable.Vector[[:space:]]+" nil t))
-   ;;      (goto-char 1)
-   ;;      ;; I don't necessarilly agree with these results, indeed they will change when
-   ;;      ;; we refactor the search backend.
-   ;;      (ensime-assert (search-forward "scala.collection.immutable.VectorIterator" nil t)))
+      (with-current-buffer ensime-search-target-buffer-name
+        ;; uncomment to see the results (e.g. if they change due to server improvements)
+        ;;(message "%s" (buffer-string))
+        (goto-char 1)
+        (ensime-assert (search-forward-regexp "scala.collection.immutable.Vector[[:space:]]+" nil t))
+        (goto-char 1)
+        ;; I don't necessarilly agree with these results, indeed they will change when
+        ;; we refactor the search backend.
+        (ensime-assert (search-forward "scala.collection.immutable.VectorIterator" nil t)))
 
-   ;;    (ensime-search-quit)
-   ;;    (ensime-test-cleanup proj))))
+      (ensime-search-quit)
+      (ensime-test-cleanup proj))))
 
 
    (ensime-async-test
