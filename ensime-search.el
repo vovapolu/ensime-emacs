@@ -150,7 +150,13 @@
      (use-local-map ensime-search-target-buffer-map)
      (setq ensime-buffer-connection conn)
 
-     (select-window (split-window (selected-window) (- (window-height) 4)))
+     ;; Compute the heights of the search window and text entry area
+     ;; The entry height is 4 lines unless the window-height is too small
+     (let* ((wh (window-height))
+            (eh (min (- wh 2) 4))
+            (size (- wh eh)))
+       (select-window (split-window (selected-window) size))
+       )
      (switch-to-buffer (get-buffer-create ensime-search-buffer-name))
      (setq ensime-buffer-connection conn)
      (erase-buffer)
@@ -161,7 +167,7 @@
 
 
 (defun ensime-search-mode ()
-  "Major mode for incrementally seaching through all open buffers."
+  "Major mode for incrementally searching through all open buffers."
   (interactive)
   (setq major-mode 'ensime-search-mode
         mode-name "ensime-search")
@@ -310,7 +316,7 @@
  BEG, END and LENOLD are passed in from the hook.
  An actual update is only done if the regexp has changed or if the
  optional fourth argument FORCE is non-nil."
-  (let ((new-query (buffer-string)))
+  (let ((new-query (buffer-substring-no-properties (point-min) (point-max))))
     (when (not (equal new-query ensime-search-text))
       (setq ensime-search-text new-query)
       (if (>= (length new-query) ensime-search-min-length)
