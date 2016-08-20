@@ -284,6 +284,7 @@ Assembly jars are available at http://ensime.typelevel.org"
            (buildfile (expand-file-name "build.sbt"))
            (buildcontents (ensime--create-sbt-start-script scala-version))
            (buildpluginsfile (expand-file-name "project/plugins.sbt"))
+           (process-environment (cons "COURSIER_MODE=update-changing" process-environment))
            (buildpropsfile (expand-file-name "project/build.properties")))
 
       (when (file-exists-p classpath-file) (delete-file classpath-file))
