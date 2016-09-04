@@ -1205,50 +1205,50 @@
         (ensime-assert-equal (length notes) 0))
       (ensime-test-cleanup proj))))
 
-   (ensime-async-test
-    "Test deleting file and reloading."
-    (let* ((proj (ensime-create-tmp-project
-                  `((:name
-                     "pack/a.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package pack"
-                                 "class A(value:String){"
-                                 "}"))
-                    (:name
-                     "pack/b.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package pack"
-                                 "class B(value:String) extends A(value){"
-                                 "}"))))))
-      (ensime-test-init-proj proj))
+   ;; (ensime-async-test
+   ;;  "Test deleting file and reloading."
+   ;;  (let* ((proj (ensime-create-tmp-project
+   ;;                `((:name
+   ;;                   "pack/a.scala"
+   ;;                   :contents ,(ensime-test-concat-lines
+   ;;                               "package pack"
+   ;;                               "class A(value:String){"
+   ;;                               "}"))
+   ;;                  (:name
+   ;;                   "pack/b.scala"
+   ;;                   :contents ,(ensime-test-concat-lines
+   ;;                               "package pack"
+   ;;                               "class B(value:String) extends A(value){"
+   ;;                               "}"))))))
+   ;;    (ensime-test-init-proj proj))
 
 
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-typecheck-all)))
+   ;;  ((:connected))
+   ;;  ((:compiler-ready :full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (ensime-typecheck-all)))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let* ((notes (ensime-all-notes)))
-        (ensime-assert-equal (length notes) 0))
-      (kill-buffer nil)
-      (delete-file (car src-files))
-      (find-file (cadr src-files))))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let* ((notes (ensime-all-notes)))
+   ;;      (ensime-assert-equal (length notes) 0))
+   ;;    (kill-buffer nil)
+   ;;    (delete-file (car src-files))
+   ;;    (find-file (cadr src-files))))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-typecheck-all)))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (ensime-typecheck-all)))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let* ((notes (ensime-all-notes)))
-        (ensime-assert (> (length notes) 0)))
-      (ensime-test-cleanup proj))))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let* ((notes (ensime-all-notes)))
+   ;;      (ensime-assert (> (length notes) 0)))
+   ;;    (ensime-test-cleanup proj))))
 
    (ensime-async-test
     "Test formatting source."
