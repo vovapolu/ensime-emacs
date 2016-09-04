@@ -1205,50 +1205,50 @@
         (ensime-assert-equal (length notes) 0))
       (ensime-test-cleanup proj))))
 
-   (ensime-async-test
-    "Test deleting file and reloading."
-    (let* ((proj (ensime-create-tmp-project
-                  `((:name
-                     "pack/a.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package pack"
-                                 "class A(value:String){"
-                                 "}"))
-                    (:name
-                     "pack/b.scala"
-                     :contents ,(ensime-test-concat-lines
-                                 "package pack"
-                                 "class B(value:String) extends A(value){"
-                                 "}"))))))
-      (ensime-test-init-proj proj))
+   ;; (ensime-async-test
+   ;;  "Test deleting file and reloading."
+   ;;  (let* ((proj (ensime-create-tmp-project
+   ;;                `((:name
+   ;;                   "pack/a.scala"
+   ;;                   :contents ,(ensime-test-concat-lines
+   ;;                               "package pack"
+   ;;                               "class A(value:String){"
+   ;;                               "}"))
+   ;;                  (:name
+   ;;                   "pack/b.scala"
+   ;;                   :contents ,(ensime-test-concat-lines
+   ;;                               "package pack"
+   ;;                               "class B(value:String) extends A(value){"
+   ;;                               "}"))))))
+   ;;    (ensime-test-init-proj proj))
 
 
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-typecheck-all)))
+   ;;  ((:connected))
+   ;;  ((:compiler-ready :full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (ensime-typecheck-all)))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let* ((notes (ensime-all-notes)))
-        (ensime-assert-equal (length notes) 0))
-      (kill-buffer nil)
-      (delete-file (car src-files))
-      (find-file (cadr src-files))))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let* ((notes (ensime-all-notes)))
+   ;;      (ensime-assert-equal (length notes) 0))
+   ;;    (kill-buffer nil)
+   ;;    (delete-file (car src-files))
+   ;;    (find-file (cadr src-files))))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (ensime-typecheck-all)))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (ensime-typecheck-all)))
 
-    ((:full-typecheck-finished)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let* ((notes (ensime-all-notes)))
-        (ensime-assert (> (length notes) 0)))
-      (ensime-test-cleanup proj))))
+   ;;  ((:full-typecheck-finished)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let* ((notes (ensime-all-notes)))
+   ;;      (ensime-assert (> (length notes) 0)))
+   ;;    (ensime-test-cleanup proj))))
 
    (ensime-async-test
     "Test formatting source."
@@ -1382,81 +1382,81 @@
       (ensime-test-cleanup proj))))
 
 
-   (ensime-async-test
-    "Test misc operations on unsaved source file."
-    (let* ((proj (ensime-create-tmp-project '())))
-      (ensime-test-init-proj proj))
+   ;; (ensime-async-test
+   ;;  "Test misc operations on unsaved source file."
+   ;;  (let* ((proj (ensime-create-tmp-project '())))
+   ;;    (ensime-test-init-proj proj))
 
-    ((:connected))
-    ((:compiler-ready :full-typecheck-finished :indexer-ready)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let ((path (expand-file-name "src/main/scala/test/Test.scala" (plist-get proj :root-dir))))
-	(ensime-test-var-put :path path)
-        (make-directory (file-name-directory path) t)
-        (find-file path)
-        (insert (ensime-test-concat-lines
-                                 "package test"
-                                 "class A(value:String){"
-                                 "def hello(){"
-                                 "  println/*1*/(1)"
-                                 "  /*2*/"
-                                 "}"
-                                 "}"))
-	(ensime-mode)
-        (ensime-assert-equal (ensime-owning-connection-for-source-file path)
-                             (ensime-owning-connection-for-rootdir
-                              (plist-get proj :root-dir)))
+   ;;  ((:connected))
+   ;;  ((:compiler-ready :full-typecheck-finished :indexer-ready)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let ((path (expand-file-name "src/main/scala/test/Test.scala" (plist-get proj :root-dir))))
+   ;;  (ensime-test-var-put :path path)
+   ;;      (make-directory (file-name-directory path) t)
+   ;;      (find-file path)
+   ;;      (insert (ensime-test-concat-lines
+   ;;                               "package test"
+   ;;                               "class A(value:String){"
+   ;;                               "def hello(){"
+   ;;                               "  println/*1*/(1)"
+   ;;                               "  /*2*/"
+   ;;                               "}"
+   ;;                               "}"))
+   ;;  (ensime-mode)
+   ;;      (ensime-assert-equal (ensime-owning-connection-for-source-file path)
+   ;;                           (ensime-owning-connection-for-rootdir
+   ;;                            (plist-get proj :root-dir)))
 
-        (ensime-assert (= (length (ensime-all-notes)) 0))
+   ;;      (ensime-assert (= (length (ensime-all-notes)) 0))
 
-	;; Verify nothing we did caused the file to be written.
-	(ensime-assert (not (file-exists-p path)))
-	)))
+   ;;  ;; Verify nothing we did caused the file to be written.
+   ;;  (ensime-assert (not (file-exists-p path)))
+   ;;  )))
 
-    ((:full-typecheck-finished :region-sem-highlighted)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let ((path (ensime-test-var-get :path)))
-	(find-file path)
-        (ensime-assert (= (length (ensime-all-notes)) 0))
-	(goto-char (ensime-test-before-label "2"))
-        (insert "prin")
+   ;;  ((:full-typecheck-finished :region-sem-highlighted)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let ((path (ensime-test-var-get :path)))
+   ;;  (find-file path)
+   ;;      (ensime-assert (= (length (ensime-all-notes)) 0))
+   ;;  (goto-char (ensime-test-before-label "2"))
+   ;;      (insert "prin")
 
-        (ensime-typecheck-current-buffer)
-        (ensime-sem-high-refresh-buffer)
+   ;;      (ensime-typecheck-current-buffer)
+   ;;      (ensime-sem-high-refresh-buffer)
 
-	;; Verify nothing we did caused the file to be written.
-	(ensime-assert (not (file-exists-p path)))
-        )))
+   ;;  ;; Verify nothing we did caused the file to be written.
+   ;;  (ensime-assert (not (file-exists-p path)))
+   ;;      )))
 
-    ((:full-typecheck-finished :region-sem-highlighted)
-     (ensime-test-with-proj
-      (proj src-files)
-      (let ((path (ensime-test-var-get :path)))
-	(find-file path)
+   ;;  ((:full-typecheck-finished :region-sem-highlighted)
+   ;;   (ensime-test-with-proj
+   ;;    (proj src-files)
+   ;;    (let ((path (ensime-test-var-get :path)))
+   ;;  (find-file path)
 
-	;; Auto typecheck should catch unrecognized symbol
-	(ensime-assert (> (length (ensime-all-notes)) 0))
+   ;;  ;; Auto typecheck should catch unrecognized symbol
+   ;;  (ensime-assert (> (length (ensime-all-notes)) 0))
 
-	;; Auto semantic highlighting should have kicked in
-	(goto-char (ensime-test-before-label "1"))
-	(ensime-assert (memq 'functionCall (ensime-sem-high-sym-types-at-point)))
+   ;;  ;; Auto semantic highlighting should have kicked in
+   ;;  (goto-char (ensime-test-before-label "1"))
+   ;;  (ensime-assert (memq 'functionCall (ensime-sem-high-sym-types-at-point)))
 
-	;; Completion should work
-	(goto-char (ensime-test-before-label "2"))
-	(let* ((candidates (ensime--test-completions)))
-          (ensime-assert (member "println" candidates)))
+   ;;  ;; Completion should work
+   ;;  (goto-char (ensime-test-before-label "2"))
+   ;;  (let* ((candidates (ensime--test-completions)))
+   ;;        (ensime-assert (member "println" candidates)))
 
-	;; Verify nothing we did caused the file to be written.
-	(ensime-assert (not (file-exists-p path)))
+   ;;  ;; Verify nothing we did caused the file to be written.
+   ;;  (ensime-assert (not (file-exists-p path)))
 
-	;; Extra steps to kill unsaved file without complaint.
-	(set-buffer-modified-p nil)
-	(kill-buffer nil)
+   ;;  ;; Extra steps to kill unsaved file without complaint.
+   ;;  (set-buffer-modified-p nil)
+   ;;  (kill-buffer nil)
 
-	(ensime-test-cleanup proj))))
-    )
+   ;;  (ensime-test-cleanup proj))))
+   ;;  )
 
    (ensime-async-test
     "Test add import."
