@@ -4,8 +4,48 @@
   (require 'cl)
   (require 'ensime-macros))
 
+(require 'arc-mode)
+(require 'comint)
+(require 'dash)
+(require 'easymenu)
+(require 'flymake)
+(require 'font-lock)
+(require 'hideshow)
+(require 'pp)
 (require 's)
 (require 'scala-mode)
+(require 'thingatpt)
+(require 'timer)
+(require 'tooltip)
+(require 'url-gw)
+
+(require 'ensime-client)
+(require 'ensime-util)
+(require 'ensime-vars)
+(require 'ensime-config)
+(require 'ensime-completion-util)
+
+(require 'ensime-inf)
+(require 'ensime-stacktrace)
+(require 'ensime-debug)
+(require 'ensime-editor)
+(require 'ensime-goto-testfile)
+(require 'ensime-inspector)
+(require 'ensime-model)
+(require 'ensime-notes)
+(require 'ensime-popup)
+(require 'ensime-refactor)
+(require 'ensime-startup)
+(require 'ensime-undo)
+(require 'ensime-search)
+(require 'ensime-doc)
+(require 'ensime-semantic-highlight)
+(require 'ensime-ui)
+(require 'ensime-http)
+(require 'timer)
+
+;; should really be optional
+(require 'ensime-sbt)
 
 (defvar ensime-source-buffer-saved-hook nil
   "Hook called whenever an ensime source buffer is saved.")
@@ -318,7 +358,7 @@
 
 ;;;###autoload
 (add-hook 'scala-mode-hook
-          'ensime-mode)
+          (lambda () (when (boundp 'ensime) (ensime-mode))))
 
 ;;;;;; Mouse handlers
 

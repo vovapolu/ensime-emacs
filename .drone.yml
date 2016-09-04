@@ -8,7 +8,7 @@ build:
     - host `curl -s http://httpbin.org/ip | jq -r '.origin'` || true ;
     - cask pkg-file ;
       cask install ;
-      cask build ;
+      cask package ;
     - cask exec ert-runner ;
     - cask exec ecukes ;
     - test/run_emacs_tests.sh || test/run_emacs_tests.sh ;

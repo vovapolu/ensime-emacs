@@ -28,6 +28,7 @@
 
 (development
  ;; optional dependencies (used in the tests)
+ (depends-on "use-package")
  (depends-on "auto-complete")
  (depends-on "helm")
  ;;(depends-on "expand-region")
