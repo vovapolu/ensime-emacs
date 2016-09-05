@@ -141,12 +141,6 @@
   "Keymap for ENSIME mode."
   )
 
-;;;;; ensime-mode
-(defun ensime-scala-mode-hook ()
-  "Convenient hook function to start `ensime-mode'."
-  (scala-mode 1)
-  (ensime-mode 1))
-
 (defun ensime-run-after-save-hooks ()
   "Things to run whenever a source buffer is saved."
   (when (ensime-source-file-p)
