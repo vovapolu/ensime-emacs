@@ -352,7 +352,7 @@
 
 ;;;###autoload
 (add-hook 'scala-mode-hook
-          (lambda () (when (boundp 'ensime) (ensime-mode))))
+          (lambda () (when (fboundp 'ensime) (ensime-mode))))
 
 ;;;;;; Mouse handlers
 
