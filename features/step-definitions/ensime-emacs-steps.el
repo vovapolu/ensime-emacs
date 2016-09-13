@@ -2,6 +2,8 @@
 ;; files in this directory whose names end with "-steps.el" will be
 ;; loaded automatically by Ecukes.
 
+(require 'ensime-company) ;; the autoload cookie is not available in unit tests
+
 (When "^I open temp \\(java\\|scala\\) file \"\\(.+\\)\"$"
       (lambda (suffix arg)
         (find-file (make-temp-file arg nil (format ".%s" suffix)))))

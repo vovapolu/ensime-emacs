@@ -115,6 +115,7 @@ block notation for the final parameter."
         (indent-region (region-beginning) (region-end))
       (indent-according-to-mode))))
 
+;;;###autoload
 (defun ensime-company-enable ()
   (make-local-variable 'company-backends)
   (push #'ensime-company company-backends)
