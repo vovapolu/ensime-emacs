@@ -22,11 +22,6 @@
 
 (require 'ensime-mode)
 
-;; autoload ensime-ac-enable and ensime-company-enable so that the
-;; user can select which backend to use without loading both.
-(autoload 'ensime-company-enable "ensime-company")
-(autoload 'ensime-ac-enable "ensime-auto-complete")
-
 (defvar ensime-protocol-version "1.0")
 
 (defvar ensime-prefer-noninteractive t

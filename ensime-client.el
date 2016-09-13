@@ -398,7 +398,7 @@ This doesn't mean it will connect right after Ensime is loaded."
 (defun ensime-generate-connection-name (server-name)
   (loop for i from 1
 	for name = server-name then (format "%s<%d>" server-name i)
-	while (find name ensime-net-processes
+	while (cl-find name ensime-net-processes
 		    :key #'ensime-connection-name :test #'equal)
 	finally (return name)))
 
