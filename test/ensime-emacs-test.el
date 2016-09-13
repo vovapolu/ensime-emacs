@@ -190,7 +190,7 @@
      (should (equal internalized-syms expected)))))
 
 (ert-deftest ensime-emacs-test-path-includes-dir-p ()
-    (unless (find system-type '(windows-nt cygwin))
+  (unless (member system-type '(windows-nt cygwin))
       (let ((d (make-temp-file "ensime_test_proj" t)))
         (make-directory (concat d "/proj/src/main") t)
         (make-directory (concat d "/proj/src/main/java") t)

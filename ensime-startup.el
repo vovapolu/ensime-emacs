@@ -17,7 +17,7 @@
   "Hook called whenever a new process gets started.")
 
 (defvar ensime--classpath-separator
-  (if (find system-type '(cygwin windows-nt)) ";" ":")
+  (if (member system-type '(cygwin windows-nt)) ";" ":")
   "Separator used in Java classpaths")
 
 (defvar ensime--abort-connection nil)

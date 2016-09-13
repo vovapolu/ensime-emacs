@@ -53,7 +53,7 @@ implementation class. With an argument, open the test file in another window."
          (case-fold-search nil)
          (module-params
           (cdr
-           (find module-name ensime-goto-test-configs
+           (cl-find module-name ensime-goto-test-configs
                  :test (lambda (m p) (string-match-p (car p) m))))))
     (if (plist-member module-params key)
         (plist-get module-params key)
@@ -239,7 +239,7 @@ implementation class."
              (mapcar (lambda (s)
                        (file-name-as-directory (expand-file-name s)))
                      (plist-get module :source-roots))))
-        (when (find impl-dir module-sources :test #'equal)
+        (when (cl-find impl-dir module-sources :test #'equal)
           (return (find-if is-test-dir-fn module-sources)))))))
 
 (defun ensime-goto-test--is-test-dir (dir)

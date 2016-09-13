@@ -1,8 +1,9 @@
 ;;; ensime-mode.el --- ensime mode
 
 (eval-when-compile
-  (require 'cl)
   (require 'ensime-macros))
+
+(require 'cl) ;; needs to be interpreter until we catch all uses
 
 (require 'arc-mode)
 (require 'comint)
@@ -437,8 +438,8 @@
                         t))
 
        ;; Show implicit conversions if present
-       ((or (find 'implicitConversion sem-high-overlays)
-            (find 'implicitParams sem-high-overlays))
+       ((or (member 'implicitConversion sem-high-overlays)
+            (member 'implicitParams sem-high-overlays))
         (ensime-tooltip-show-message
          (mapconcat 'identity (ensime-implicit-notes-at point) "\n")))
 
