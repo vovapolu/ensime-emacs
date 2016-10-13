@@ -63,7 +63,7 @@
   :group 'ensime
   :prefix "ensime-inf-")
 
-(defcustom ensime-inf-cmd-template '(:java :java-flags "-classpath" :classpath "-Dscala.usejavacp=true" "scala.tools.nsc.MainGenericRunner" "-Xnojline")
+(defcustom ensime-inf-cmd-template '(:java :java-flags "-Dscala.usejavacp=true" "scala.tools.nsc.MainGenericRunner" "-Xnojline")
   "The command to launch the scala interpreter. Keywords will be replaced
 with data loaded from server."
   :type 'string
@@ -120,8 +120,8 @@ Used for determining the default in the next one.")
 
   (let ((conn (or (ensime-connection-or-nil)
 		  (ensime-prompt-for-connection)))
-	(root-path (or (ensime-configured-project-root) "."))
-	(cmd-and-args (ensime-inf-get-repl-cmd-line)))
+       (root-path (or (ensime-configured-project-root) "."))
+       (cmd-and-args (ensime-inf-get-repl-cmd-line)))
 
     (switch-to-buffer-other-window
      (get-buffer-create ensime-inf-buffer-name))
@@ -141,7 +141,13 @@ Used for determining the default in the next one.")
     (let ((proc (get-buffer-process (current-buffer))))
       (ensime-set-query-on-exit-flag proc)
       (set-process-sentinel proc 'ensime--inf-process-sentinel)
-      proc)))
+      proc))
+
+    (let ((classpath (plist-get (ensime-inf-repl-config) :classpath))
+          (send-cp (lambda (dep)
+                     (ensime-inf-send-string ":cp %s" dep))))
+      (message "Length of classpath %d" (length classpath))
+      (mapc send-cp (split-string classpath ensime--classpath-separator))))
 
 (defun ensime--inf-process-sentinel (proc ev)
   (unless (process-live-p proc)
